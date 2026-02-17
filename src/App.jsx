@@ -41,7 +41,7 @@ function App() {
     <div className="min-h-screen app-theme-transition" data-mode={state.mode}>
       <div
         className="background-image"
-        style={{ backgroundImage: `url('${state.mode === 'sandpit' ? '/sand-bg.png' : '/ocean-bg.jpg'}')` }}
+        style={{ backgroundImage: `url('${state.mode === 'sandpit' ? '/sand-bg.png' : '/stars-bg.png'}')` }}
       />
       <div className="background-gradient" />
       
