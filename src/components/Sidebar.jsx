@@ -4,6 +4,7 @@ import ProviderSelector from './ProviderSelector'
 const ETHOS_EGO_ID = 'ethos-ego'
 const UNIQUE_PERSONA_IDS = ['challenger-champion', 'guardian-gambler', 'strategist-leaper', 'conformist-maverick']
 
+// Same side panel for both Default and Sandpit: Ethos vs Ego, Unique Personas, and AI Models (Voice A + Voice B).
 export default function Sidebar() {
   const { state, toggleSidebar, setFramework, setVoiceAProvider, setVoiceBProvider, getActiveFramework } = useApp()
   const framework = getActiveFramework()

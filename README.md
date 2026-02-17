@@ -20,7 +20,7 @@ See **DIVERGENT-PROJECT-BRIEF-v2** (or your project brief) and **ALIGNMENT-PLAN.
 - **Unique Personas** — Challenger/Champion, Guardian/Gambler, Strategist/Leaper, Conformist/Maverick
 - **Default / Sandpit** — Mode toggle with cross-fade; different prompts and model options per mode
 - **Dual AI voices** — Two perspectives respond simultaneously; multi-round debate and “agree to disagree”
-- **Model choice** — Default: one model for both. Sandpit: two dropdowns + Grok
+- **Model choice** — Same side panel in Default and Sandpit: Voice A and Voice B dropdowns; choose any model per voice. Default: Claude, GPT-4o, Gemini. Sandpit: adds Grok.
 - **Cards & Thread views** — Side-by-side panels or linear conversation
 - **Liquid glass UI** — Teal (Default) and sand (Sandpit) palettes; Syne + Inter typography
 

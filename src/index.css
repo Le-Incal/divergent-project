@@ -488,13 +488,17 @@ body {
   -moz-appearance: none;
   padding: 10px 36px 10px 12px;
   border-radius: 10px;
-  background: rgba(var(--azure-mist-rgb), 0.12);
-  border: 1px solid rgba(var(--icy-aqua-rgb), 0.22);
-  color: var(--soft-white);
   font-size: 12px;
   font-weight: 600;
   letter-spacing: -0.01em;
   outline: none;
+}
+
+/* Default: teal palette for Voice A / Voice B dropdowns in side panel */
+[data-mode="default"] .model-select {
+  background: rgba(var(--azure-mist-rgb), 0.12);
+  border: 1px solid rgba(var(--icy-aqua-rgb), 0.22);
+  color: var(--soft-white);
 }
 
 [data-mode="sandpit"] .model-select {
