@@ -5,7 +5,6 @@ import Header from './components/Header'
 import VoiceCard from './components/VoiceCard'
 import DebateCard from './components/DebateCard'
 import InputArea from './components/InputArea'
-import ConversationView from './components/ConversationView'
 import LandingPage from './components/LandingPage'
 
 function App() {

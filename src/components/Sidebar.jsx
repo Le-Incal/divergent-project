@@ -8,13 +8,7 @@ const UNIQUE_PERSONA_IDS = ['challenger-champion', 'guardian-gambler', 'strategi
 export default function Sidebar() {
   const { state, toggleSidebar, setFramework, setVoiceAProvider, setVoiceBProvider, getActiveFramework } = useApp()
   const framework = getActiveFramework()
-
-  const chatHistory = [
-    { id: 1, title: 'Should I leave my job?', date: 'Today' },
-    { id: 2, title: 'Investment strategy for 2026', date: 'Yesterday' },
-    { id: 3, title: 'Moving to a new city', date: 'Dec 28' },
-    { id: 4, title: 'Starting a side project', date: 'Dec 25' },
-  ]
+  const chatHistory = []
 
   return (
     <aside className={`sidebar ${state.sidebarOpen ? '' : 'collapsed'}`}>
@@ -106,16 +100,20 @@ export default function Sidebar() {
           Recent
         </h3>
         <div className="flex flex-col gap-1">
-          {chatHistory.map((chat) => (
-            <button
-              key={chat.id}
-              className="text-left px-3 py-2.5 rounded-md transition-colors hover:bg-white/10"
-              style={{ color: 'var(--icy-aqua)' }}
-            >
-              <div className="text-sm font-medium truncate" style={{ letterSpacing: '-0.01em' }}>{chat.title}</div>
-              <div className="text-xs mt-1" style={{ color: 'var(--tropical-teal)' }}>{chat.date}</div>
-            </button>
-          ))}
+          {chatHistory.length === 0 ? (
+            <p className="text-xs" style={{ color: 'var(--tropical-teal)' }}>No recent explorations</p>
+          ) : (
+            chatHistory.map((chat) => (
+              <button
+                key={chat.id}
+                className="text-left px-3 py-2.5 rounded-md transition-colors hover:bg-white/10"
+                style={{ color: 'var(--icy-aqua)' }}
+              >
+                <div className="text-sm font-medium truncate" style={{ letterSpacing: '-0.01em' }}>{chat.title}</div>
+                <div className="text-xs mt-1" style={{ color: 'var(--tropical-teal)' }}>{chat.date}</div>
+              </button>
+            ))
+          )}
         </div>
       </div>
     </aside>
