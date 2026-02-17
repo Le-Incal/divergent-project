@@ -81,10 +81,6 @@ export default function Sidebar() {
           voiceBProvider={state.voiceBProvider}
           onVoiceAChange={setVoiceAProvider}
           onVoiceBChange={setVoiceBProvider}
-          onSingleModelChange={(id) => {
-            setVoiceAProvider(id)
-            setVoiceBProvider(id)
-          }}
         />
       </div>
       

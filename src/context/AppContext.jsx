@@ -216,6 +216,9 @@ const initialState = {
   isDebating: false,
 }
 
+const DEFAULT_PROVIDER_FALLBACK = DEFAULT_MODE_PROVIDERS[0] ?? 'claude'
+const coerceDefaultProvider = (id) => (DEFAULT_MODE_PROVIDERS.includes(id) ? id : DEFAULT_PROVIDER_FALLBACK)
+
 const reducer = (state, action) => {
   switch (action.type) {
     case 'TOGGLE_SIDEBAR':
@@ -224,7 +227,13 @@ const reducer = (state, action) => {
       return { ...state, viewMode: action.payload }
     case 'SET_MODE':
       if (action.payload === 'default') {
-        return { ...state, mode: 'default', voiceBProvider: state.voiceAProvider }
+        return {
+          ...state,
+          mode: 'default',
+          // Default supports Claude/GPT-4o/Gemini only. If we were using Grok in Sandpit, fall back.
+          voiceAProvider: coerceDefaultProvider(state.voiceAProvider),
+          voiceBProvider: coerceDefaultProvider(state.voiceBProvider),
+        }
       }
       return { ...state, mode: action.payload }
     case 'SET_FRAMEWORK':
