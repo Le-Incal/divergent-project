@@ -42,7 +42,10 @@ export default function VoiceCard({ voice, type, response, isLoading }) {
           <span className="text-[10px] font-normal opacity-60" style={{ color: 'inherit', letterSpacing: '0.02em' }}>
             {provider?.name}
           </span>
-          <span className="text-xs font-normal" style={{ color: isChallenger ? 'rgba(178, 226, 223, 0.6)' : 'rgba(9, 37, 52, 0.5)' }}>
+          <span
+            className="text-xs font-normal"
+            style={{ color: isChallenger ? 'rgba(var(--icy-aqua-rgb), 0.62)' : 'rgba(var(--jet-black-rgb), 0.55)' }}
+          >
             {voice.role}
           </span>
         </div>
@@ -52,7 +55,14 @@ export default function VoiceCard({ voice, type, response, isLoading }) {
         {isLoading ? (
           <div className="flex flex-col gap-3">
             {[90, 75, 85].map((w, i) => (
-              <div key={i} className="h-4 rounded animate-pulse" style={{ background: isChallenger ? 'rgba(178, 226, 223, 0.2)' : 'rgba(9, 37, 52, 0.15)', width: `${w}%` }} />
+              <div
+                key={i}
+                className="h-4 rounded animate-pulse"
+                style={{
+                  background: isChallenger ? 'rgba(var(--icy-aqua-rgb), 0.22)' : 'rgba(var(--jet-black-rgb), 0.14)',
+                  width: `${w}%`,
+                }}
+              />
             ))}
           </div>
         ) : response ? (

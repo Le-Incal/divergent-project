@@ -52,8 +52,9 @@ In Railway → **Variables**:
 | `ANTHROPIC_API_KEY` | Claude API key |
 | `OPENAI_API_KEY` | OpenAI API key |
 | `GOOGLE_API_KEY` | Google/Gemini API key |
+| `XAI_API_KEY` | Grok API key (Sandpit only) |
 
-For Sandpit Grok support, add a `/api/chat-grok` endpoint and `XAI_API_KEY` (or equivalent) when you integrate xAI.
+You only need the keys for providers you use. For Sandpit cross-model matchups, add `/api/chat-grok` and set `XAI_API_KEY`.
 
 ### 4. Domain
 
@@ -85,7 +86,7 @@ Vite, Tailwind, and other build tools are listed in `dependencies` (not `devDepe
 
 - **Frontend:** React 18, Vite, Tailwind CSS
 - **Backend:** Express.js (MVP); brief references Vercel Edge for future
-- **AI:** Claude, GPT-4o, Gemini (streaming); Grok planned for Sandpit
+- **AI:** Claude, GPT-4o, Gemini, Grok (streaming; Grok in Sandpit only)
 - **Hosting:** Railway
 
 ## API keys
@@ -95,6 +96,7 @@ Vite, Tailwind, and other build tools are listed in `dependencies` (not `devDepe
 | Claude | [console.anthropic.com](https://console.anthropic.com) |
 | GPT-4o | [platform.openai.com](https://platform.openai.com/api-keys) |
 | Gemini | [aistudio.google.com](https://aistudio.google.com/app/apikey) |
+| Grok | [console.x.ai](https://console.x.ai) (Sandpit only) |
 
 ## Repo alignment
 

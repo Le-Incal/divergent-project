@@ -85,7 +85,11 @@ export default function Sidebar() {
       <div className="relative z-10 px-5 pt-5">
         <button
           className="w-full py-3 rounded-md text-sm font-medium flex items-center justify-center gap-2 transition-all duration-200"
-          style={{ background: 'rgba(131, 208, 203, 0.12)', border: '1px solid rgba(131, 208, 203, 0.25)', color: 'var(--pearl-aqua)' }}
+          style={{
+            background: 'rgba(var(--pearl-aqua-rgb), 0.12)',
+            border: '1px solid rgba(var(--pearl-aqua-rgb), 0.25)',
+            color: 'var(--pearl-aqua)',
+          }}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
             <path d="M12 5v14M5 12h14"/>

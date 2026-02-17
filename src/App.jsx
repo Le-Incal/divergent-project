@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useApp } from './context/AppContext'
 import Sidebar from './components/Sidebar'
 import Header from './components/Header'
@@ -5,16 +6,43 @@ import VoiceCard from './components/VoiceCard'
 import DebateCard from './components/DebateCard'
 import InputArea from './components/InputArea'
 import ConversationView from './components/ConversationView'
-import DisclaimerModal from './components/DisclaimerModal'
-import ResearchDisclaimer from './components/ResearchDisclaimer'
+import LandingPage from './components/LandingPage'
 
 function App() {
   const { state, getActiveFramework, toggleSidebar } = useApp()
   const framework = getActiveFramework()
 
+  const [hasEntered, setHasEntered] = useState(() => {
+    try {
+      return sessionStorage.getItem('divergent-has-entered') === 'true'
+    } catch {
+      return false
+    }
+  })
+
+  const handleEnter = () => {
+    try {
+      sessionStorage.setItem('divergent-has-entered', 'true')
+    } catch {
+      // ignore
+    }
+    setHasEntered(true)
+  }
+
+  if (!hasEntered) {
+    return (
+      <div className="min-h-screen app-theme-transition" data-mode="default">
+        <LandingPage onEnter={handleEnter} />
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen app-theme-transition" data-mode={state.mode}>
-      <div className="background-image" style={{ backgroundImage: `url('/ocean-bg.jpg')` }} />
+      <div
+        className="background-image"
+        style={{ backgroundImage: `url('${state.mode === 'sandpit' ? '/sand-bg.png' : '/ocean-bg.jpg'}')` }}
+      />
       <div className="background-gradient" />
       
       <Sidebar />
@@ -36,9 +64,6 @@ function App() {
         </button>
       )}
       
-      {state.mode === 'default' && <DisclaimerModal />}
-      {state.mode === 'sandpit' && <ResearchDisclaimer />}
-
       <main className={`relative z-10 min-h-screen p-6 flex flex-col transition-all duration-300 ${state.sidebarOpen ? 'ml-[280px]' : 'ml-0'}`}>
         <Header />
         

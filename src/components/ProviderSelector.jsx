@@ -31,7 +31,9 @@ export default function ProviderSelector({
                 }`}
                 style={{
                   background: voiceAProvider === provider.id ? provider.color : 'transparent',
-                  border: `1px solid ${voiceAProvider === provider.id ? provider.color : 'rgba(178, 226, 223, 0.2)'}`,
+                  border: `1px solid ${
+                    voiceAProvider === provider.id ? provider.color : 'rgba(var(--icy-aqua-rgb), 0.22)'
+                  }`,
                 }}
               >
                 {provider.name}
@@ -53,7 +55,9 @@ export default function ProviderSelector({
                 }`}
                 style={{
                   background: voiceBProvider === provider.id ? provider.color : 'transparent',
-                  border: `1px solid ${voiceBProvider === provider.id ? provider.color : 'rgba(178, 226, 223, 0.2)'}`,
+                  border: `1px solid ${
+                    voiceBProvider === provider.id ? provider.color : 'rgba(var(--icy-aqua-rgb), 0.22)'
+                  }`,
                 }}
               >
                 {provider.name}
@@ -80,7 +84,9 @@ export default function ProviderSelector({
             }`}
             style={{
               background: voiceAProvider === provider.id ? provider.color : 'transparent',
-              border: `1px solid ${voiceAProvider === provider.id ? provider.color : 'rgba(178, 226, 223, 0.2)'}`,
+              border: `1px solid ${
+                voiceAProvider === provider.id ? provider.color : 'rgba(var(--icy-aqua-rgb), 0.22)'
+              }`,
             }}
           >
             {provider.name}
