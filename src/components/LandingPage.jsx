@@ -17,8 +17,8 @@ export default function LandingPage({ onEnter }) {
 
           <button className="landing-enter-btn" onClick={onEnter}>
             <span>Enter Divergent</span>
-            <span className="landing-enter-arrow" aria-hidden="true">
-              →
+            <span className="landing-enter-arrow-box" aria-hidden="true">
+              <span className="landing-enter-arrow">→</span>
             </span>
           </button>
 
