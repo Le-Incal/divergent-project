@@ -5,7 +5,6 @@ import { useChat } from '../hooks/useChat'
 export default function InputArea() {
   const { state, setUserInput, getActiveFramework } = useApp()
   const { sendMessage } = useChat()
-  const framework = getActiveFramework()
   const [localInput, setLocalInput] = useState('')
   
   const handleSubmit = async (e) => {
@@ -35,7 +34,12 @@ export default function InputArea() {
             type="submit"
             disabled={state.isLoading || !localInput.trim()}
             className="w-10 h-10 rounded-md flex items-center justify-center transition-all duration-200 disabled:opacity-50"
-            style={{ background: 'var(--yale-blue)', color: 'var(--soft-white)' }}
+            style={{
+              background:
+                state.mode === 'sandpit' ? 'rgba(var(--icy-aqua-rgb), 0.8)' : 'var(--yale-blue)',
+              color: state.mode === 'sandpit' ? 'var(--jet-black)' : 'var(--soft-white)',
+              border: state.mode === 'sandpit' ? '1px solid rgba(var(--jet-black-rgb), 0.18)' : 'none',
+            }}
           >
             {state.isLoading ? (
               <svg className="animate-spin" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -49,13 +53,6 @@ export default function InputArea() {
           </button>
         </div>
       </form>
-      
-      <p className="text-center text-xs mt-3 font-medium" style={{ color: 'rgba(9, 37, 52, 0.5)' }}>
-        <span style={{ color: 'var(--yale-blue)' }}>{framework.voiceA.name}</span>
-        {' & '}
-        <span style={{ color: 'var(--jet-black)' }}>{framework.voiceB.name}</span>
-        {' will respond'}
-      </p>
     </div>
   )
 }

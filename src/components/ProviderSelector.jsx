@@ -21,48 +21,34 @@ export default function ProviderSelector({
           <span className="text-xs font-medium" style={{ color: 'var(--icy-aqua)', letterSpacing: '-0.01em' }}>
             {voiceALabel} (Voice A)
           </span>
-          <div className="flex flex-wrap gap-1.5">
-            {sandpitProviders.map((provider) => (
-              <button
-                key={provider.id}
-                onClick={() => onVoiceAChange(provider.id)}
-                className={`px-2 py-1.5 rounded text-xs font-medium transition-all duration-200 ${
-                  voiceAProvider === provider.id ? 'text-white' : 'text-icy-aqua/70 hover:text-icy-aqua hover:bg-white/5'
-                }`}
-                style={{
-                  background: voiceAProvider === provider.id ? provider.color : 'transparent',
-                  border: `1px solid ${
-                    voiceAProvider === provider.id ? provider.color : 'rgba(var(--icy-aqua-rgb), 0.22)'
-                  }`,
-                }}
-              >
-                {provider.name}
-              </button>
-            ))}
+          <div className="model-select-wrap">
+            <select className="model-select" value={voiceAProvider} onChange={(e) => onVoiceAChange(e.target.value)}>
+              {sandpitProviders.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+            <span className="model-select-chevron" aria-hidden="true">
+              ▾
+            </span>
           </div>
         </div>
         <div className="flex flex-col gap-1.5">
           <span className="text-xs font-medium" style={{ color: 'var(--icy-aqua)', letterSpacing: '-0.01em' }}>
             {voiceBLabel} (Voice B)
           </span>
-          <div className="flex flex-wrap gap-1.5">
-            {sandpitProviders.map((provider) => (
-              <button
-                key={provider.id}
-                onClick={() => onVoiceBChange(provider.id)}
-                className={`px-2 py-1.5 rounded text-xs font-medium transition-all duration-200 ${
-                  voiceBProvider === provider.id ? 'text-white' : 'text-icy-aqua/70 hover:text-icy-aqua hover:bg-white/5'
-                }`}
-                style={{
-                  background: voiceBProvider === provider.id ? provider.color : 'transparent',
-                  border: `1px solid ${
-                    voiceBProvider === provider.id ? provider.color : 'rgba(var(--icy-aqua-rgb), 0.22)'
-                  }`,
-                }}
-              >
-                {provider.name}
-              </button>
-            ))}
+          <div className="model-select-wrap">
+            <select className="model-select" value={voiceBProvider} onChange={(e) => onVoiceBChange(e.target.value)}>
+              {sandpitProviders.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+            <span className="model-select-chevron" aria-hidden="true">
+              ▾
+            </span>
           </div>
         </div>
       </div>
@@ -74,24 +60,17 @@ export default function ProviderSelector({
       <span className="text-xs font-medium" style={{ color: 'var(--icy-aqua)', letterSpacing: '-0.01em' }}>
         Model (both voices)
       </span>
-      <div className="flex flex-wrap gap-1.5">
-        {defaultProviders.map((provider) => (
-          <button
-            key={provider.id}
-            onClick={() => onSingleModelChange(provider.id)}
-            className={`px-2 py-1.5 rounded text-xs font-medium transition-all duration-200 ${
-              voiceAProvider === provider.id ? 'text-white' : 'text-icy-aqua/70 hover:text-icy-aqua hover:bg-white/5'
-            }`}
-            style={{
-              background: voiceAProvider === provider.id ? provider.color : 'transparent',
-              border: `1px solid ${
-                voiceAProvider === provider.id ? provider.color : 'rgba(var(--icy-aqua-rgb), 0.22)'
-              }`,
-            }}
-          >
-            {provider.name}
-          </button>
-        ))}
+      <div className="model-select-wrap">
+        <select className="model-select" value={voiceAProvider} onChange={(e) => onSingleModelChange(e.target.value)}>
+          {defaultProviders.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name}
+            </option>
+          ))}
+        </select>
+        <span className="model-select-chevron" aria-hidden="true">
+          ▾
+        </span>
       </div>
     </div>
   )

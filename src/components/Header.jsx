@@ -12,6 +12,9 @@ export default function Header() {
         style={{
           background: 'var(--header-bg, rgba(255, 255, 255, 0.08))',
           border: '1px solid var(--header-border, rgba(255, 255, 255, 0.1))',
+          backdropFilter: 'blur(16px)',
+          WebkitBackdropFilter: 'blur(16px)',
+          boxShadow: '0 10px 24px rgba(var(--jet-black-rgb), 0.12)',
         }}
       >
         <button
@@ -44,6 +47,9 @@ export default function Header() {
           style={{
             background: 'var(--header-bg, rgba(255, 255, 255, 0.08))',
             border: '1px solid var(--header-border, rgba(255, 255, 255, 0.1))',
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
+            boxShadow: '0 10px 24px rgba(var(--jet-black-rgb), 0.12)',
           }}
         >
           <button

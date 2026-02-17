@@ -52,9 +52,9 @@ function App() {
           onClick={toggleSidebar}
           className="fixed left-4 top-4 w-10 h-10 rounded-lg z-[99] flex items-center justify-center transition-all duration-200"
           style={{
-            background: 'rgba(9, 37, 52, 0.6)',
+            background: 'rgba(var(--jet-black-rgb), 0.62)',
             backdropFilter: 'blur(16px)',
-            border: '1px solid rgba(178, 226, 223, 0.2)',
+            border: '1px solid rgba(var(--icy-aqua-rgb), 0.18)',
             color: 'var(--icy-aqua)',
           }}
         >
@@ -64,7 +64,11 @@ function App() {
         </button>
       )}
       
-      <main className={`relative z-10 min-h-screen p-6 flex flex-col transition-all duration-300 ${state.sidebarOpen ? 'ml-[280px]' : 'ml-0'}`}>
+      <main
+        className={`relative z-10 min-h-screen p-6 flex flex-col transition-all duration-300 ${
+          state.sidebarOpen ? 'ml-[280px]' : 'ml-0 pl-16'
+        }`}
+      >
         <Header />
         
         {state.viewMode === 'cards' ? (

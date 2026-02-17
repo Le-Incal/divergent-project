@@ -21,7 +21,11 @@ export default function Sidebar() {
         <span className="font-display text-lg font-bold text-soft-white uppercase" style={{ letterSpacing: '0.15em' }}>
           DIVERGENT
         </span>
-        <button onClick={toggleSidebar} className="w-8 h-8 flex items-center justify-center rounded-md transition-colors hover:bg-white/10 text-icy-aqua">
+        <button
+          onClick={toggleSidebar}
+          className="w-8 h-8 flex items-center justify-center rounded-md transition-colors hover:bg-white/10"
+          style={{ color: 'var(--icy-aqua)' }}
+        >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
             <path d="M11 19l-7-7 7-7M18 19l-7-7 7-7"/>
           </svg>
@@ -35,8 +39,9 @@ export default function Sidebar() {
         <button
           onClick={() => setFramework(ETHOS_EGO_ID)}
           className={`w-full text-left px-3 py-2.5 rounded-md text-sm font-medium transition-all duration-200 ${
-            state.activeFramework === ETHOS_EGO_ID ? 'bg-white/15 text-soft-white' : 'text-icy-aqua hover:bg-white/8'
+            state.activeFramework === ETHOS_EGO_ID ? 'bg-white/15' : 'hover:bg-white/8'
           }`}
+          style={{ color: state.activeFramework === ETHOS_EGO_ID ? 'var(--soft-white)' : 'var(--icy-aqua)' }}
         >
           {FRAMEWORKS[ETHOS_EGO_ID].name}
         </button>
@@ -53,8 +58,9 @@ export default function Sidebar() {
                 key={fw.id}
                 onClick={() => setFramework(fw.id)}
                 className={`px-3 py-2 rounded-md text-xs font-medium transition-all duration-200 ${
-                  state.activeFramework === fw.id ? 'bg-white/15 text-soft-white' : 'text-icy-aqua hover:bg-white/8'
+                  state.activeFramework === fw.id ? 'bg-white/15' : 'hover:bg-white/8'
                 }`}
+                style={{ color: state.activeFramework === fw.id ? 'var(--soft-white)' : 'var(--icy-aqua)' }}
               >
                 {fw.name}
               </button>
@@ -104,7 +110,11 @@ export default function Sidebar() {
         </h3>
         <div className="flex flex-col gap-1">
           {chatHistory.map((chat) => (
-            <button key={chat.id} className="text-left px-3 py-2.5 rounded-md transition-colors hover:bg-white/10 text-icy-aqua">
+            <button
+              key={chat.id}
+              className="text-left px-3 py-2.5 rounded-md transition-colors hover:bg-white/10"
+              style={{ color: 'var(--icy-aqua)' }}
+            >
               <div className="text-sm font-medium truncate" style={{ letterSpacing: '-0.01em' }}>{chat.title}</div>
               <div className="text-xs mt-1" style={{ color: 'var(--tropical-teal)' }}>{chat.date}</div>
             </button>

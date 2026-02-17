@@ -55,11 +55,12 @@
   --azure-mist-rgb: 240, 223, 208;
   --soft-white: #F0DFD0;
   --soft-white-rgb: 240, 223, 208;
-  --header-bg: rgba(var(--azure-mist-rgb), 0.16);
-  --header-border: rgba(var(--jet-black-rgb), 0.22);
-  --header-active: var(--soft-white);
-  --header-inactive: var(--pearl-aqua);
-  --header-label: var(--icy-aqua);
+  /* Stronger header contrast over sand texture */
+  --header-bg: rgba(var(--azure-mist-rgb), 0.48);
+  --header-border: rgba(var(--jet-black-rgb), 0.28);
+  --header-active: rgba(var(--jet-black-rgb), 0.92);
+  --header-inactive: rgba(var(--jet-black-rgb), 0.72);
+  --header-label: rgba(var(--jet-black-rgb), 0.78);
 }
 
 .app-theme-transition {
@@ -453,6 +454,52 @@ body {
   mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
+  pointer-events: none;
+}
+
+.input-wrapper input::placeholder {
+  color: rgba(var(--jet-black-rgb), 0.45);
+}
+
+.model-select-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.model-select {
+  width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  padding: 10px 36px 10px 12px;
+  border-radius: 10px;
+  background: rgba(var(--azure-mist-rgb), 0.12);
+  border: 1px solid rgba(var(--icy-aqua-rgb), 0.22);
+  color: var(--soft-white);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  outline: none;
+}
+
+[data-mode="sandpit"] .model-select {
+  background: rgba(var(--azure-mist-rgb), 0.22);
+  border: 1px solid rgba(var(--jet-black-rgb), 0.18);
+  color: rgba(var(--jet-black-rgb), 0.9);
+}
+
+.model-select:focus {
+  box-shadow: 0 0 0 3px rgba(var(--pearl-aqua-rgb), 0.18);
+}
+
+.model-select-chevron {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 12px;
+  opacity: 0.75;
+  color: currentColor;
   pointer-events: none;
 }
 
