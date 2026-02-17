@@ -18,7 +18,7 @@ export default function LandingPage({ onEnter }) {
         <div className="landing-content">
           <div className="landing-kicker">Ethos vs Ego</div>
 
-          <div className="landing-title font-display">Divergent</div>
+          <h1 className="landing-title font-display">Divergent</h1>
           <div className="landing-tagline">See where your paths diverge</div>
 
           <div className="landing-blurb">
@@ -26,16 +26,18 @@ export default function LandingPage({ onEnter }) {
             voices side-by-side, then rounds of exchange to reveal where the paths split.
           </div>
 
-          <button
-            className={`landing-enter-btn ${isEntering ? 'is-entering' : ''}`}
-            onClick={handleEnter}
-            disabled={isEntering}
-          >
-            <span>Enter Divergent</span>
-            <span className="landing-enter-arrow-box" aria-hidden="true">
-              <span className="landing-enter-arrow">→</span>
-            </span>
-          </button>
+          <div className="landing-cta">
+            <button
+              className={`landing-enter-btn ${isEntering ? 'is-entering' : ''}`}
+              onClick={handleEnter}
+              disabled={isEntering}
+            >
+              <span className="landing-enter-btn-text">Enter Divergent</span>
+              <span className="landing-enter-arrow-box" aria-hidden="true">
+                <span className="landing-enter-arrow">→</span>
+              </span>
+            </button>
+          </div>
 
           <div className="landing-fineprint">
             Divergent is a decision tool that shows contrasting perspectives. It is not professional advice and does not
