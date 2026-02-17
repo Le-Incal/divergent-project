@@ -3,7 +3,9 @@ import { useApp } from '../context/AppContext'
 export default function ConversationView() {
   const { state, getActiveFramework } = useApp()
   const framework = getActiveFramework()
-  
+  const bubbleA = framework?.id === 'ethos-ego' ? 'champion' : 'challenger'
+  const bubbleB = framework?.id === 'ethos-ego' ? 'challenger' : 'champion'
+
   const demoConversation = {
     userMessage: "Should I leave my job to start a company? I've been thinking about this for months.",
     voiceAResponse: `Let me <strong>push back</strong> on this. <em>What's the worst realistic outcome here?</em> Have you <strong>stress-tested your assumptions?</strong>`,
@@ -30,15 +32,15 @@ export default function ConversationView() {
       <div className="flex gap-4">
         <div className="flex-1 flex gap-3">
           <div className="w-9 h-9 rounded-lg flex items-center justify-center text-xs font-semibold flex-shrink-0" style={{ background: 'rgba(9, 37, 52, 0.9)', color: 'var(--icy-aqua)' }}>C</div>
-          <div className="conv-bubble challenger flex-1" style={{ maxWidth: '100%' }}>
-            <div className="text-xs font-semibold uppercase mb-2 opacity-70" style={{ letterSpacing: '0.05em' }}>{framework.voiceA.name}</div>
+          <div className={`conv-bubble ${bubbleA} flex-1`} style={{ maxWidth: '100%' }}>
+            <div className="text-xs font-semibold uppercase mb-2 opacity-70" style={{ letterSpacing: '0.05em' }}>{framework?.voiceA?.name}</div>
             <div dangerouslySetInnerHTML={{ __html: state.voiceAResponse || demoConversation.voiceAResponse }} />
           </div>
         </div>
         <div className="flex-1 flex gap-3">
           <div className="w-9 h-9 rounded-lg flex items-center justify-center text-xs font-semibold flex-shrink-0" style={{ background: 'rgba(178, 226, 223, 0.9)', color: 'var(--jet-black)' }}>C</div>
-          <div className="conv-bubble champion flex-1" style={{ maxWidth: '100%' }}>
-            <div className="text-xs font-semibold uppercase mb-2 opacity-70" style={{ letterSpacing: '0.05em' }}>{framework.voiceB.name}</div>
+          <div className={`conv-bubble ${bubbleB} flex-1`} style={{ maxWidth: '100%' }}>
+            <div className="text-xs font-semibold uppercase mb-2 opacity-70" style={{ letterSpacing: '0.05em' }}>{framework?.voiceB?.name}</div>
             <div dangerouslySetInnerHTML={{ __html: state.voiceBResponse || demoConversation.voiceBResponse }} />
           </div>
         </div>
@@ -49,8 +51,8 @@ export default function ConversationView() {
       {demoConversation.debate.map((msg, index) => (
         <div key={index} className="flex gap-3">
           <div className="w-9 h-9 rounded-lg flex items-center justify-center text-xs font-semibold flex-shrink-0" style={{ background: msg.speaker === 'A' ? 'rgba(9, 37, 52, 0.9)' : 'rgba(178, 226, 223, 0.9)', color: msg.speaker === 'A' ? 'var(--icy-aqua)' : 'var(--jet-black)' }}>C</div>
-          <div className={`conv-bubble ${msg.speaker === 'A' ? 'challenger' : 'champion'}`}>
-            <div className="text-xs font-semibold uppercase mb-2 opacity-70" style={{ letterSpacing: '0.05em' }}>{msg.speaker === 'A' ? framework.voiceA.name : framework.voiceB.name}</div>
+          <div className={`conv-bubble ${msg.speaker === 'A' ? bubbleA : bubbleB}`}>
+            <div className="text-xs font-semibold uppercase mb-2 opacity-70" style={{ letterSpacing: '0.05em' }}>{msg.speaker === 'A' ? framework?.voiceA?.name : framework?.voiceB?.name}</div>
             <div dangerouslySetInnerHTML={{ __html: msg.text }} />
           </div>
         </div>

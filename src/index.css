@@ -2,7 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
+/* Default Mode: teal / water */
+:root,
+[data-mode="default"] {
   --jet-black: #092534;
   --deep-space: #0C3146;
   --yale-blue: #145277;
@@ -13,6 +15,37 @@
   --icy-aqua: #B2E2DF;
   --azure-mist: #E0F4F2;
   --soft-white: #F5FAFA;
+  --header-bg: rgba(255, 255, 255, 0.08);
+  --header-border: rgba(255, 255, 255, 0.1);
+  --header-active: var(--soft-white);
+  --header-inactive: var(--icy-aqua);
+  --header-label: var(--icy-aqua);
+}
+
+/* Sandpit Mode: sand palette */
+[data-mode="sandpit"] {
+  --jet-black: #2C1810;
+  --deep-space: #4A3228;
+  --yale-blue: #6B4C3B;
+  --cerulean: #8B6B52;
+  --pacific-cyan: #A8876A;
+  --tropical-teal: #C4A882;
+  --pearl-aqua: #DEC9A0;
+  --icy-aqua: #EDE0C8;
+  --azure-mist: #F5EEE0;
+  --soft-white: #FAF6EF;
+  --parchment: #EDE0C8;
+  --sand-mist: #F5EEE0;
+  --desert-white: #FAF6EF;
+  --header-bg: rgba(245, 238, 224, 0.15);
+  --header-border: rgba(44, 24, 16, 0.2);
+  --header-active: var(--desert-white);
+  --header-inactive: var(--warm-cocoa, #6B4C3B);
+  --header-label: var(--bleached-sand, #DEC9A0);
+}
+
+.app-theme-transition {
+  transition: background-color 0.4s ease;
 }
 
 * {
@@ -37,10 +70,7 @@ body {
   background-position: center;
 }
 
-.background-gradient {
-  position: fixed;
-  inset: 0;
-  z-index: 1;
+[data-mode="default"] .background-gradient {
   background: linear-gradient(
     135deg,
     rgba(12, 49, 70, 0.75) 0%,
@@ -50,6 +80,24 @@ body {
     rgba(104, 177, 182, 0.45) 80%,
     rgba(131, 208, 203, 0.4) 100%
   );
+}
+
+[data-mode="sandpit"] .background-gradient {
+  background: linear-gradient(
+    135deg,
+    rgba(44, 24, 16, 0.85) 0%,
+    rgba(74, 50, 40, 0.75) 20%,
+    rgba(107, 76, 59, 0.65) 40%,
+    rgba(139, 107, 82, 0.55) 60%,
+    rgba(196, 168, 130, 0.45) 80%,
+    rgba(245, 238, 224, 0.35) 100%
+  );
+}
+
+.background-gradient {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
   background-size: 300% 300%;
   animation: gradientShift 12s ease-in-out infinite;
 }

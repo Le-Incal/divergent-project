@@ -1,10 +1,10 @@
 import { useApp } from '../context/AppContext'
-import { ProviderBadge } from './ProviderSelector'
 
 export default function VoiceCard({ voice, type, response, isLoading }) {
-  const { state } = useApp()
+  const { state, getVoiceAProvider, getVoiceBProvider } = useApp()
   const isChallenger = type === 'challenger'
   const providerId = isChallenger ? state.voiceAProvider : state.voiceBProvider
+  const provider = isChallenger ? getVoiceAProvider() : getVoiceBProvider()
   
   const demoContent = isChallenger ? (
     <>
@@ -37,11 +37,15 @@ export default function VoiceCard({ voice, type, response, isLoading }) {
           <span className="text-lg font-semibold" style={{ letterSpacing: '-0.01em', color: isChallenger ? 'var(--icy-aqua)' : 'var(--jet-black)' }}>
             {voice.name}
           </span>
-          <ProviderBadge providerId={providerId} />
         </div>
-        <span className="text-xs font-normal" style={{ color: isChallenger ? 'rgba(178, 226, 223, 0.6)' : 'rgba(9, 37, 52, 0.5)' }}>
-          {voice.role}
-        </span>
+        <div className="flex flex-col items-end gap-0.5">
+          <span className="text-[10px] font-normal opacity-60" style={{ color: 'inherit', letterSpacing: '0.02em' }}>
+            {provider?.name}
+          </span>
+          <span className="text-xs font-normal" style={{ color: isChallenger ? 'rgba(178, 226, 223, 0.6)' : 'rgba(9, 37, 52, 0.5)' }}>
+            {voice.role}
+          </span>
+        </div>
       </div>
       
       <div className="card-content">

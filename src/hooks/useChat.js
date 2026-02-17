@@ -13,7 +13,7 @@ export function useChat() {
     dispatch({ type: 'START_LOADING' })
     dispatch({ type: 'SET_VOICE_A_RESPONSE', payload: '' })
     dispatch({ type: 'SET_VOICE_B_RESPONSE', payload: '' })
-    dispatch({ type: 'ADD_DEBATE_MESSAGE', payload: [] })
+    dispatch({ type: 'CLEAR_DEBATE_MESSAGES' })
     
     setIsStreaming({ voiceA: true, voiceB: true })
 

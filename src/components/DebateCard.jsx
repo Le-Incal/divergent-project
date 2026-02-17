@@ -52,12 +52,11 @@ export default function DebateCard() {
         <div className="mt-6 pt-6" style={{ borderTop: '1px solid rgba(9, 37, 52, 0.1)' }}>
           <p className="text-sm font-medium mb-4" style={{ color: 'var(--cerulean)' }}>Where do you want to go from here?</p>
           <div className="flex flex-wrap gap-3">
-            <button className="choice-btn">Follow {framework.voiceA.name}</button>
-            <button className="choice-btn">Follow {framework.voiceB.name}</button>
+            <button className="choice-btn">Follow {framework?.voiceA?.name}</button>
+            <button className="choice-btn">Follow {framework?.voiceB?.name}</button>
             <button className="choice-btn" onClick={continueDebate} disabled={state.isDebating}>
               {state.isDebating ? 'Debating...' : 'Continue Debate'}
             </button>
-            <button className="choice-btn">Synthesize</button>
             <button className="choice-btn">Explore Both</button>
           </div>
         </div>
