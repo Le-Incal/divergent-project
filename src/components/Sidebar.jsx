@@ -1,13 +1,14 @@
+import { useState } from 'react'
 import { useApp, FRAMEWORKS } from '../context/AppContext'
-import ProviderSelector from './ProviderSelector'
+import ModelSelectorModal from './ModelSelectorModal'
 
 const ETHOS_EGO_ID = 'ethos-ego'
 const UNIQUE_PERSONA_IDS = ['challenger-champion', 'guardian-gambler', 'strategist-leaper', 'conformist-maverick']
 
-// Same side panel for both Default and Sandpit: Ethos vs Ego, Unique Personas, and AI Models (Voice A + Voice B).
+// Same side panel for both Default and Sandpit: Ethos vs Ego, Unique Personas; AI Models in a pop-up.
 export default function Sidebar() {
-  const { state, toggleSidebar, setMode, setFramework, setVoiceAProvider, setVoiceBProvider, getActiveFramework } = useApp()
-  const framework = getActiveFramework()
+  const [modelModalOpen, setModelModalOpen] = useState(false)
+  const { state, toggleSidebar, setMode, setFramework } = useApp()
   const chatHistory = []
   const isDefault = state.mode === 'default'
 
@@ -101,19 +102,20 @@ export default function Sidebar() {
       </div>
 
       <div className="relative z-10 px-5 pb-5 border-b border-white/10">
-        <h3 className="text-xs font-semibold uppercase mb-3" style={{ letterSpacing: '0.08em', color: 'var(--pearl-aqua)' }}>
+        <button
+          type="button"
+          onClick={() => setModelModalOpen(true)}
+          className="flex items-center gap-2 px-3 py-2 rounded-md text-xs font-medium transition-colors hover:bg-white/10 w-full"
+          style={{ color: 'var(--pearl-aqua)' }}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+          </svg>
           AI Models
-        </h3>
-        <ProviderSelector
-          mode={state.mode}
-          voiceALabel={framework?.voiceA?.name}
-          voiceBLabel={framework?.voiceB?.name}
-          voiceAProvider={state.voiceAProvider}
-          voiceBProvider={state.voiceBProvider}
-          onVoiceAChange={setVoiceAProvider}
-          onVoiceBChange={setVoiceBProvider}
-        />
+        </button>
       </div>
+
+      <ModelSelectorModal open={modelModalOpen} onClose={() => setModelModalOpen(false)} />
       
       <div className="relative z-10 px-5 pt-5">
         <button
