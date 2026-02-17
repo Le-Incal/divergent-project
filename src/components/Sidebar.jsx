@@ -6,9 +6,10 @@ const UNIQUE_PERSONA_IDS = ['challenger-champion', 'guardian-gambler', 'strategi
 
 // Same side panel for both Default and Sandpit: Ethos vs Ego, Unique Personas, and AI Models (Voice A + Voice B).
 export default function Sidebar() {
-  const { state, toggleSidebar, setFramework, setVoiceAProvider, setVoiceBProvider, getActiveFramework } = useApp()
+  const { state, toggleSidebar, setMode, setFramework, setVoiceAProvider, setVoiceBProvider, getActiveFramework } = useApp()
   const framework = getActiveFramework()
   const chatHistory = []
+  const isDefault = state.mode === 'default'
 
   return (
     <aside className={`sidebar ${state.sidebarOpen ? '' : 'collapsed'}`}>
@@ -27,7 +28,42 @@ export default function Sidebar() {
         </button>
       </div>
 
-      <div className="relative z-10 p-5">
+      <div className="relative z-10 px-5 pt-5 pb-4">
+        <div
+          className="flex rounded-md overflow-hidden w-full"
+          style={{
+            background: 'var(--header-bg, rgba(255, 255, 255, 0.08))',
+            border: '1px solid var(--header-border, rgba(255, 255, 255, 0.1))',
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
+          }}
+        >
+          <button
+            onClick={() => setMode('default')}
+            className={`flex-1 px-3 py-2 text-xs font-medium transition-all duration-200 ${
+              isDefault ? 'bg-white/15' : 'hover:bg-white/8'
+            }`}
+            style={{
+              color: isDefault ? 'var(--header-active, var(--soft-white))' : 'var(--header-inactive, var(--icy-aqua))',
+            }}
+          >
+            Default
+          </button>
+          <button
+            onClick={() => setMode('sandpit')}
+            className={`flex-1 px-3 py-2 text-xs font-medium transition-all duration-200 ${
+              !isDefault ? 'bg-white/15' : 'hover:bg-white/8'
+            }`}
+            style={{
+              color: !isDefault ? 'var(--header-active, var(--parchment))' : 'var(--header-inactive, var(--icy-aqua))',
+            }}
+          >
+            Sandpit
+          </button>
+        </div>
+      </div>
+
+      <div className="relative z-10 p-5 pt-0">
         <h3 className="text-xs font-semibold uppercase mb-2" style={{ letterSpacing: '0.08em', color: 'var(--pearl-aqua)' }}>
           Ethos vs Ego
         </h3>

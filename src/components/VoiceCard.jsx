@@ -3,22 +3,7 @@ import { useApp } from '../context/AppContext'
 export default function VoiceCard({ voice, type, response, isLoading }) {
   const { state, getVoiceAProvider, getVoiceBProvider } = useApp()
   const isChallenger = type === 'challenger'
-  const providerId = isChallenger ? state.voiceAProvider : state.voiceBProvider
   const provider = isChallenger ? getVoiceAProvider() : getVoiceBProvider()
-  
-  const demoContent = isChallenger ? (
-    <>
-      <p>Let me <strong>push back</strong> on this. Before you decide, consider: <em>What's the worst realistic outcome here?</em></p>
-      <p>Have you <strong>stress-tested your assumptions?</strong> What would need to be true for this to fail spectacularly?</p>
-      <p>I want to make sure you're seeing the <strong>full picture</strong>, not just the optimistic version.</p>
-    </>
-  ) : (
-    <>
-      <p>This could be <strong>exactly the opportunity</strong> you've been waiting for. You have the capability, the timing feels right, and the upside is <em>significant.</em></p>
-      <p>Yes, there's risk—but <strong>playing it safe has its own costs.</strong> Inaction compounds.</p>
-      <p>What would the <strong>boldest version of yourself</strong> do here? <em>That person is also you.</em></p>
-    </>
-  )
   
   const formatText = (text) => {
     return text
@@ -65,10 +50,10 @@ export default function VoiceCard({ voice, type, response, isLoading }) {
               />
             ))}
           </div>
-        ) : response ? (
+        ) : response != null ? (
           <div dangerouslySetInnerHTML={{ __html: formatText(response) }} />
         ) : (
-          demoContent
+          <div style={{ height: '100%' }} />
         )}
       </div>
     </div>

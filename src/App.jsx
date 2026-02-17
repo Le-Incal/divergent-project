@@ -70,27 +70,23 @@ function App() {
       >
         <Header />
         
-        {state.viewMode === 'cards' ? (
-          <div className="flex-1 flex flex-col gap-6">
-            <div className="grid grid-cols-2 gap-6 max-w-[1300px] mx-auto w-full">
-              <VoiceCard
-                voice={framework.voiceA}
-                type={framework.id === 'ethos-ego' ? 'champion' : 'challenger'}
-                response={state.voiceAResponse}
-                isLoading={state.isLoading}
-              />
-              <VoiceCard
-                voice={framework.voiceB}
-                type={framework.id === 'ethos-ego' ? 'challenger' : 'champion'}
-                response={state.voiceBResponse}
-                isLoading={state.isLoading}
-              />
-            </div>
-            {(state.voiceAResponse || state.voiceBResponse || state.debateMessages.length > 0) && <DebateCard />}
+        <div className="flex-1 flex flex-col gap-6">
+          <div className="grid grid-cols-2 gap-6 max-w-[1300px] mx-auto w-full">
+            <VoiceCard
+              voice={framework.voiceA}
+              type={framework.id === 'ethos-ego' ? 'champion' : 'challenger'}
+              response={state.voiceAResponse}
+              isLoading={state.isLoading}
+            />
+            <VoiceCard
+              voice={framework.voiceB}
+              type={framework.id === 'ethos-ego' ? 'challenger' : 'champion'}
+              response={state.voiceBResponse}
+              isLoading={state.isLoading}
+            />
           </div>
-        ) : (
-          <ConversationView />
-        )}
+          {(state.voiceAResponse || state.voiceBResponse || state.debateMessages.length > 0) && <DebateCard />}
+        </div>
         
         <InputArea />
       </main>

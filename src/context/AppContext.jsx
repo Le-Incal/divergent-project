@@ -2,7 +2,7 @@ import { createContext, useContext, useReducer } from 'react'
 
 const AppContext = createContext()
 
-// Available AI providers. Grok is Sandpit-only.
+// Available AI providers (Default and Sandpit).
 export const PROVIDERS = {
   claude: {
     id: 'claude',
@@ -31,11 +31,10 @@ export const PROVIDERS = {
     model: 'grok-2',
     endpoint: '/api/chat-grok',
     color: '#1DA1F2',
-    sandpitOnly: true,
   },
 }
 
-export const DEFAULT_MODE_PROVIDERS = ['claude', 'openai', 'gemini']
+export const DEFAULT_MODE_PROVIDERS = ['claude', 'openai', 'gemini', 'grok']
 export const SANDPIT_PROVIDERS = ['claude', 'openai', 'gemini', 'grok']
 
 // Voice frameworks configuration
@@ -203,7 +202,6 @@ function getSystemPrompt(voice, mode) {
 
 const initialState = {
   sidebarOpen: true,
-  viewMode: 'cards',
   mode: 'default', // 'default' | 'sandpit'
   activeFramework: 'ethos-ego',
   voiceAProvider: 'claude',
@@ -223,14 +221,12 @@ const reducer = (state, action) => {
   switch (action.type) {
     case 'TOGGLE_SIDEBAR':
       return { ...state, sidebarOpen: !state.sidebarOpen }
-    case 'SET_VIEW_MODE':
-      return { ...state, viewMode: action.payload }
     case 'SET_MODE':
       if (action.payload === 'default') {
         return {
           ...state,
           mode: 'default',
-          // Default supports Claude/GPT-4o/Gemini only. If we were using Grok in Sandpit, fall back.
+          // Coerce to a valid default provider if needed (e.g. after removing a provider from the list).
           voiceAProvider: coerceDefaultProvider(state.voiceAProvider),
           voiceBProvider: coerceDefaultProvider(state.voiceBProvider),
         }
@@ -291,7 +287,6 @@ export function AppProvider({ children }) {
     getVoiceAProvider: () => PROVIDERS[state.voiceAProvider],
     getVoiceBProvider: () => PROVIDERS[state.voiceBProvider],
     toggleSidebar: () => dispatch({ type: 'TOGGLE_SIDEBAR' }),
-    setViewMode: (viewMode) => dispatch({ type: 'SET_VIEW_MODE', payload: viewMode }),
     setMode: (mode) => dispatch({ type: 'SET_MODE', payload: mode }),
     setFramework: (id) => dispatch({ type: 'SET_FRAMEWORK', payload: id }),
     setUserInput: (input) => dispatch({ type: 'SET_USER_INPUT', payload: input }),
