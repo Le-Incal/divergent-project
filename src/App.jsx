@@ -71,7 +71,7 @@ function App() {
         <Header />
         
         <div className="flex-1 flex flex-col gap-6">
-          <div className="grid grid-cols-2 gap-6 max-w-[1300px] mx-auto w-full">
+          <div className="grid grid-cols-2 gap-6 max-w-[1300px] mx-auto w-full mt-10">
             <VoiceCard
               voice={framework.voiceA}
               type={framework.id === 'ethos-ego' ? 'champion' : 'challenger'}
