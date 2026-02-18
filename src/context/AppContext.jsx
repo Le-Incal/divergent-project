@@ -214,7 +214,7 @@ const initialState = {
   voiceBProvider: 'claude',
   voiceAVoiceId: VOICES[0]?.id ?? 'male-1',
   voiceBVoiceId: VOICES[1]?.id ?? 'female-1',
-  voicePlaybackMode: 'turn-taking', // 'turn-taking' | 'overlap' | 'both-at-once'
+  debateOverlap: 50, // 0 = turn-taking, 100 = both at once, 1–99 = B starts after delay
   userInput: '',
   isLoading: false,
   voiceAResponse: null,
@@ -251,8 +251,8 @@ const reducer = (state, action) => {
       return { ...state, voiceAVoiceId: action.payload }
     case 'SET_VOICE_B_VOICE':
       return { ...state, voiceBVoiceId: action.payload }
-    case 'SET_VOICE_PLAYBACK_MODE':
-      return { ...state, voicePlaybackMode: action.payload }
+    case 'SET_DEBATE_OVERLAP':
+      return { ...state, debateOverlap: Math.min(100, Math.max(0, Number(action.payload))) }
     case 'SET_USER_INPUT':
       return { ...state, userInput: action.payload }
     case 'START_LOADING':
@@ -319,7 +319,7 @@ export function AppProvider({ children }) {
     setVoiceBProvider: (id) => dispatch({ type: 'SET_VOICE_B_PROVIDER', payload: id }),
     setVoiceAVoice: (id) => dispatch({ type: 'SET_VOICE_A_VOICE', payload: id }),
     setVoiceBVoice: (id) => dispatch({ type: 'SET_VOICE_B_VOICE', payload: id }),
-    setVoicePlaybackMode: (mode) => dispatch({ type: 'SET_VOICE_PLAYBACK_MODE', payload: mode }),
+    setDebateOverlap: (value) => dispatch({ type: 'SET_DEBATE_OVERLAP', payload: value }),
   }
   
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>

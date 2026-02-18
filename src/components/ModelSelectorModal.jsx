@@ -2,12 +2,6 @@ import { createPortal } from 'react-dom'
 import { useApp, PROVIDERS, VOICES } from '../context/AppContext'
 import ProviderSelector from './ProviderSelector'
 
-const PLAYBACK_MODES = [
-  { id: 'turn-taking', label: 'Turn-taking' },
-  { id: 'overlap', label: 'Overlap' },
-  { id: 'both-at-once', label: 'Both at once' },
-]
-
 export default function ModelSelectorModal({ open, onClose }) {
   const {
     state,
@@ -15,7 +9,7 @@ export default function ModelSelectorModal({ open, onClose }) {
     setVoiceBProvider,
     setVoiceAVoice,
     setVoiceBVoice,
-    setVoicePlaybackMode,
+    setDebateOverlap,
     getActiveFramework,
   } = useApp()
   const framework = getActiveFramework()
@@ -125,32 +119,30 @@ export default function ModelSelectorModal({ open, onClose }) {
 
         <div className="mt-4 pt-4 border-t border-white/10">
           <h3 className="text-xs font-semibold uppercase mb-2" style={{ letterSpacing: '0.06em', color: 'var(--pearl-aqua)' }}>
-            Playback
+            Debate overlap
           </h3>
-          <p className="text-[10px] mb-2" style={{ color: 'var(--tropical-teal)' }}>How the two voices play when you play the debate</p>
-          <div
-            className="flex rounded-md overflow-hidden"
-            style={{
-              background: 'rgba(255,255,255,0.06)',
-              border: '1px solid rgba(178, 226, 223, 0.15)',
-            }}
-          >
-            {PLAYBACK_MODES.map((m) => (
-              <button
-                key={m.id}
-                type="button"
-                onClick={() => setVoicePlaybackMode(m.id)}
-                className={`flex-1 px-2 py-2 text-[11px] font-medium transition-colors ${
-                  state.voicePlaybackMode === m.id ? 'bg-white/15' : 'hover:bg-white/10'
-                }`}
-                style={{
-                  color: state.voicePlaybackMode === m.id ? 'var(--soft-white)' : 'var(--icy-aqua)',
-                }}
-              >
-                {m.label}
-              </button>
-            ))}
+          <p className="text-[10px] mb-2" style={{ color: 'var(--tropical-teal)' }}>Increase or reduce how much the two voices overlap when you play the debate</p>
+          <div className="flex items-center gap-3">
+            <span className="text-[10px] font-medium shrink-0" style={{ color: 'var(--icy-aqua)' }}>Turn-taking</span>
+            <input
+              type="range"
+              min={0}
+              max={100}
+              value={state.debateOverlap}
+              onChange={(e) => setDebateOverlap(Number(e.target.value))}
+              className="debate-overlap-slider flex-1"
+              style={{
+                background: `linear-gradient(to right, var(--pearl-aqua) 0%, var(--pearl-aqua) ${state.debateOverlap}%, rgba(255,255,255,0.15) ${state.debateOverlap}%, rgba(255,255,255,0.15) 100%)`,
+              }}
+              aria-label="Debate overlap from turn-taking to both at once"
+            />
+            <span className="text-[10px] font-medium shrink-0" style={{ color: 'var(--icy-aqua)' }}>Both at once</span>
           </div>
+          <p className="text-[10px] mt-1.5" style={{ color: 'var(--tropical-teal)' }}>
+            {state.debateOverlap === 0 && 'Voice B starts when Voice A ends.'}
+            {state.debateOverlap === 100 && 'Both voices start together.'}
+            {state.debateOverlap > 0 && state.debateOverlap < 100 && `Voice B starts ${((100 - state.debateOverlap) * 50 / 1000).toFixed(1)}s after Voice A.`}
+          </p>
         </div>
 
         <div className="mt-4 pt-3 border-t border-white/10 flex flex-wrap gap-x-4 gap-y-1 text-xs" style={{ color: 'var(--tropical-teal)' }}>

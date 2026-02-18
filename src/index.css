@@ -636,6 +636,46 @@ body {
   pointer-events: none;
 }
 
+/* Debate overlap slider */
+.debate-overlap-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 8px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.15);
+  outline: none;
+}
+.debate-overlap-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--pearl-aqua);
+  cursor: pointer;
+  border: 2px solid rgba(9, 37, 52, 0.9);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+.debate-overlap-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--pearl-aqua);
+  cursor: pointer;
+  border: 2px solid rgba(9, 37, 52, 0.9);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+.debate-overlap-slider::-webkit-slider-runnable-track {
+  height: 8px;
+  border-radius: 4px;
+  background: transparent;
+}
+.debate-overlap-slider::-moz-range-track {
+  height: 8px;
+  border-radius: 4px;
+  background: transparent;
+}
+
 /* Conversation bubbles */
 .conv-bubble {
   max-width: 70%;

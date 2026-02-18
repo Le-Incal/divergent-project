@@ -21,7 +21,7 @@ export default function DebateCard() {
         state.voiceBResponse ?? '',
         getVoiceASpeakerVoiceId(),
         getVoiceBSpeakerVoiceId(),
-        state.voicePlaybackMode
+        state.debateOverlap
       )
     } catch (e) {
       console.error('Play debate error:', e)
