@@ -37,6 +37,12 @@ export const PROVIDERS = {
 export const DEFAULT_MODE_PROVIDERS = ['claude', 'openai', 'gemini', 'grok']
 export const SANDPIT_PROVIDERS = ['claude', 'openai', 'gemini', 'grok']
 
+// ElevenLabs speaker voices (paste your voice IDs from ElevenLabs Voice Library).
+export const VOICES = [
+  { id: 'male-1', name: 'James', voiceId: 'REPLACE_WITH_ELEVENLABS_VOICE_ID', gender: 'male' },
+  { id: 'female-1', name: 'Sarah', voiceId: 'REPLACE_WITH_ELEVENLABS_VOICE_ID', gender: 'female' },
+]
+
 // Voice frameworks configuration
 // Ethos vs Ego is the primary default; Unique Personas are optional focused pairs.
 export const FRAMEWORKS = {
@@ -206,6 +212,9 @@ const initialState = {
   activeFramework: 'ethos-ego',
   voiceAProvider: 'claude',
   voiceBProvider: 'claude',
+  voiceAVoiceId: VOICES[0]?.id ?? 'male-1',
+  voiceBVoiceId: VOICES[1]?.id ?? 'female-1',
+  voicePlaybackMode: 'turn-taking', // 'turn-taking' | 'overlap' | 'both-at-once'
   userInput: '',
   isLoading: false,
   voiceAResponse: null,
@@ -238,6 +247,12 @@ const reducer = (state, action) => {
       return { ...state, voiceAProvider: action.payload }
     case 'SET_VOICE_B_PROVIDER':
       return { ...state, voiceBProvider: action.payload }
+    case 'SET_VOICE_A_VOICE':
+      return { ...state, voiceAVoiceId: action.payload }
+    case 'SET_VOICE_B_VOICE':
+      return { ...state, voiceBVoiceId: action.payload }
+    case 'SET_VOICE_PLAYBACK_MODE':
+      return { ...state, voicePlaybackMode: action.payload }
     case 'SET_USER_INPUT':
       return { ...state, userInput: action.payload }
     case 'START_LOADING':
@@ -280,18 +295,31 @@ export function AppProvider({ children }) {
     }
   }
 
+  const getSpeakerVoiceId = (voiceKey) => {
+    const id = voiceKey === 'A' ? state.voiceAVoiceId : state.voiceBVoiceId
+    const voice = VOICES.find((v) => v.id === id)
+    const voiceId = voice?.voiceId ?? null
+    if (!voiceId || voiceId.startsWith('REPLACE_')) return null
+    return voiceId
+  }
+
   const value = {
     state,
     dispatch,
     getActiveFramework,
     getVoiceAProvider: () => PROVIDERS[state.voiceAProvider],
     getVoiceBProvider: () => PROVIDERS[state.voiceBProvider],
+    getVoiceASpeakerVoiceId: () => getSpeakerVoiceId('A'),
+    getVoiceBSpeakerVoiceId: () => getSpeakerVoiceId('B'),
     toggleSidebar: () => dispatch({ type: 'TOGGLE_SIDEBAR' }),
     setMode: (mode) => dispatch({ type: 'SET_MODE', payload: mode }),
     setFramework: (id) => dispatch({ type: 'SET_FRAMEWORK', payload: id }),
     setUserInput: (input) => dispatch({ type: 'SET_USER_INPUT', payload: input }),
     setVoiceAProvider: (id) => dispatch({ type: 'SET_VOICE_A_PROVIDER', payload: id }),
     setVoiceBProvider: (id) => dispatch({ type: 'SET_VOICE_B_PROVIDER', payload: id }),
+    setVoiceAVoice: (id) => dispatch({ type: 'SET_VOICE_A_VOICE', payload: id }),
+    setVoiceBVoice: (id) => dispatch({ type: 'SET_VOICE_B_VOICE', payload: id }),
+    setVoicePlaybackMode: (mode) => dispatch({ type: 'SET_VOICE_PLAYBACK_MODE', payload: mode }),
   }
   
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>

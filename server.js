@@ -228,6 +228,48 @@ app.post('/api/chat-gemini', async (req, res) => {
   }
 });
 
+// ElevenLabs TTS proxy (keeps API key server-side)
+app.post('/api/tts', async (req, res) => {
+  try {
+    const { text, voiceId } = req.body;
+    const apiKey = process.env.ELEVENLABS_API_KEY;
+
+    if (!apiKey) {
+      return res.status(503).json({ error: 'TTS not configured: ELEVENLABS_API_KEY missing' });
+    }
+    if (!text || typeof text !== 'string' || !voiceId || typeof voiceId !== 'string') {
+      return res.status(400).json({ error: 'Missing or invalid text or voiceId' });
+    }
+
+    const url = `https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(voiceId)}`;
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'xi-api-key': apiKey,
+        Accept: 'audio/mpeg',
+      },
+      body: JSON.stringify({
+        text: text.slice(0, 5000), // ElevenLabs limits text length
+        model_id: 'eleven_multilingual_v2',
+      }),
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error('ElevenLabs TTS error:', response.status, errText);
+      return res.status(response.status).json({ error: 'TTS request failed' });
+    }
+
+    const buffer = await response.arrayBuffer();
+    res.setHeader('Content-Type', 'audio/mpeg');
+    res.send(Buffer.from(buffer));
+  } catch (error) {
+    console.error('TTS handler error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Fallback to index.html for SPA routing
 app.get('*', (req, res) => {
   res.sendFile(join(__dirname, 'dist', 'index.html'));

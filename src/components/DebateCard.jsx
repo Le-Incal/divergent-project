@@ -1,12 +1,34 @@
+import { useState } from 'react'
 import { useApp } from '../context/AppContext'
 import { useChat } from '../hooks/useChat'
+import { playDebateAudio } from '../utils/playDebateAudio'
 
 export default function DebateCard() {
-  const { state, getActiveFramework } = useApp()
+  const { state, getActiveFramework, getVoiceASpeakerVoiceId, getVoiceBSpeakerVoiceId } = useApp()
   const { continueDebate } = useChat()
+  const [isPlayingDebate, setIsPlayingDebate] = useState(false)
   const framework = getActiveFramework()
   
   const hasRealResponses = state.voiceAResponse && state.voiceBResponse
+  const canPlayDebate = (state.voiceAResponse || state.voiceBResponse) && (getVoiceASpeakerVoiceId() || getVoiceBSpeakerVoiceId())
+
+  const handlePlayDebate = async () => {
+    if (!canPlayDebate || isPlayingDebate) return
+    setIsPlayingDebate(true)
+    try {
+      await playDebateAudio(
+        state.voiceAResponse ?? '',
+        state.voiceBResponse ?? '',
+        getVoiceASpeakerVoiceId(),
+        getVoiceBSpeakerVoiceId(),
+        state.voicePlaybackMode
+      )
+    } catch (e) {
+      console.error('Play debate error:', e)
+    } finally {
+      setIsPlayingDebate(false)
+    }
+  }
   
   const demoDebate = [
     { speaker: 'A', name: framework.voiceA.name, text: '"Boldest version of yourself"—that\'s <em>romantic</em>, but let\'s get specific. <strong>What happens when this fails?</strong>' },
@@ -50,6 +72,21 @@ export default function DebateCard() {
         </div>
         
         <div className="mt-6 pt-6" style={{ borderTop: '1px solid rgba(9, 37, 52, 0.1)' }}>
+          {canPlayDebate && (
+            <div className="mb-4">
+              <button
+                type="button"
+                className="choice-btn flex items-center gap-2"
+                onClick={handlePlayDebate}
+                disabled={isPlayingDebate}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+                {isPlayingDebate ? 'Playing…' : 'Play debate'}
+              </button>
+            </div>
+          )}
           <p className="text-sm font-medium mb-4" style={{ color: 'var(--cerulean)' }}>Where do you want to go from here?</p>
           <div className="flex flex-wrap gap-3">
             <button className="choice-btn">Follow {framework?.voiceA?.name}</button>
