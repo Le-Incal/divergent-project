@@ -1,4 +1,4 @@
-import { createPortal } from 'react-dom/client'
+import { createPortal } from 'react-dom'
 import { useApp, PROVIDERS, VOICES } from '../context/AppContext'
 import ProviderSelector from './ProviderSelector'
 
@@ -29,7 +29,7 @@ export default function ModelSelectorModal({ open, onClose }) {
   const currentVoiceA = VOICES.find((v) => v.id === state.voiceAVoiceId)?.name ?? '—'
   const currentVoiceB = VOICES.find((v) => v.id === state.voiceBVoiceId)?.name ?? '—'
 
-  return (
+  return createPortal(
     <>
       <div
         className="fixed inset-0 z-[150] bg-black/50 backdrop-blur-sm"
@@ -158,6 +158,7 @@ export default function ModelSelectorModal({ open, onClose }) {
           <span>{voiceBLabel}: {currentB} / {currentVoiceB}</span>
         </div>
       </div>
-    </>
+    </>,
+    document.body
   )
 }
