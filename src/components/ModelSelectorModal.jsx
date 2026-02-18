@@ -33,7 +33,7 @@ export default function ModelSelectorModal({ open, onClose }) {
       <div
         role="dialog"
         aria-labelledby="model-selector-title"
-        className="fixed left-1/2 top-1/2 z-[160] w-[min(380px,calc(100vw-32px))] max-h-[90vh] overflow-y-auto -translate-x-1/2 -translate-y-1/2 rounded-xl p-5 shadow-xl"
+        className="model-selector-modal fixed left-1/2 top-1/2 z-[160] w-[min(380px,calc(100vw-32px))] max-h-[90vh] overflow-y-auto -translate-x-1/2 -translate-y-1/2 rounded-xl p-5 shadow-xl"
         style={{
           background: 'rgba(9, 37, 52, 0.92)',
           border: '1px solid rgba(178, 226, 223, 0.2)',

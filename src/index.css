@@ -625,6 +625,22 @@ body {
   box-shadow: 0 0 0 3px rgba(var(--pearl-aqua-rgb), 0.18);
 }
 
+/* Modal: brand-aligned select and option (no stark white, no gray highlight) */
+.model-selector-modal .model-select {
+  background: rgba(var(--icy-aqua-rgb), 0.14);
+  border: 1px solid rgba(var(--pearl-aqua-rgb), 0.28);
+  color: var(--soft-white);
+}
+.model-selector-modal .model-select option {
+  background: var(--deep-space);
+  color: var(--icy-aqua);
+}
+.model-selector-modal .model-select option:checked,
+.model-selector-modal .model-select option:hover {
+  background: rgba(var(--pearl-aqua-rgb), 0.35);
+  color: var(--jet-black);
+}
+
 .model-select-chevron {
   position: absolute;
   right: 12px;
