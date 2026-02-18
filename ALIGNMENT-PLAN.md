@@ -134,6 +134,16 @@ This document maps the **current repo** to the **DIVERGENT-PROJECT-BRIEF-v2.md**
 
 ---
 
+## 12. Design notes (for agents & developers)
+
+### Debate and the Overlap slider
+
+- **Agents debate based on their personalities.** The content and style of argument (whether to interrupt, overlap, or take turns) should be driven by the persona’s system prompt and the framework (Ethos vs Ego, etc.), not by a single global rule.
+- **The Overlap slider is an app feature, not a permission structure.** It does not tell the agent “you can” or “you can’t” overlap. The agent (via its personality and prompts) decides *whether* to argue or overlap.
+- **The slider sets how much we allow an agent to go.** It’s a ceiling: it controls the *maximum* overlap the app will use when playing back the debate (e.g. 0 = strict turn-taking playback, 100 = both voices can start together). It does not grant or revoke permission; it only caps the playback behavior.
+
+---
+
 ## Implementation Order (Suggested)
 
 1. **Personas:** Add Ethos vs Ego to `AppContext` (Default prompts first), set as default; keep Unique Personas as-is.

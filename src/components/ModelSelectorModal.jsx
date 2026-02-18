@@ -121,7 +121,7 @@ export default function ModelSelectorModal({ open, onClose }) {
           <h3 className="text-xs font-semibold uppercase mb-2" style={{ letterSpacing: '0.06em', color: 'var(--pearl-aqua)' }}>
             Debate overlap
           </h3>
-          <p className="text-[10px] mb-2" style={{ color: 'var(--tropical-teal)' }}>Increase or reduce how much the two voices overlap when you play the debate</p>
+          <p className="text-[10px] mb-2" style={{ color: 'var(--tropical-teal)' }}>Sets how much overlap is allowed at playback. Agents decide whether to argue or overlap; this is the ceiling, not a permission.</p>
           <div className="flex items-center gap-3">
             <span className="text-[10px] font-medium shrink-0" style={{ color: 'var(--icy-aqua)' }}>Turn-taking</span>
             <input

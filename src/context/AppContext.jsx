@@ -214,7 +214,8 @@ const initialState = {
   voiceBProvider: 'claude',
   voiceAVoiceId: VOICES[0]?.id ?? 'male-1',
   voiceBVoiceId: VOICES[1]?.id ?? 'female-1',
-  debateOverlap: 50, // 0 = turn-taking, 100 = both at once, 1–99 = B starts after delay
+  // Debate overlap slider: app feature only. 0 = turn-taking playback, 100 = both at once. Does not grant/revoke permission; agents decide overlap by personality. Slider = ceiling on playback.
+  debateOverlap: 50,
   userInput: '',
   isLoading: false,
   voiceAResponse: null,
