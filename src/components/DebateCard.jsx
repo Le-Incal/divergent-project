@@ -4,10 +4,14 @@ import { useChat } from '../hooks/useChat'
 import { playDebateAudio } from '../utils/playDebateAudio'
 
 export default function DebateCard() {
-  const { state, getActiveFramework, getVoiceASpeakerVoiceId, getVoiceBSpeakerVoiceId } = useApp()
-  const { continueDebate } = useChat()
+  const { state, setSelectedBranch, getActiveFramework, getVoiceASpeakerVoiceId, getVoiceBSpeakerVoiceId } = useApp()
+  const { continueDebate, fetchResolution, isResolving } = useChat()
   const [isPlayingDebate, setIsPlayingDebate] = useState(false)
   const framework = getActiveFramework()
+
+  const maxRounds = state.mode === 'sandpit' ? 5 : 3
+  const currentRounds = 1 + state.debateMessages.length
+  const atRoundLimit = currentRounds >= maxRounds
   
   const hasRealResponses = state.voiceAResponse && state.voiceBResponse
   const canPlayDebate = (state.voiceAResponse || state.voiceBResponse) && (getVoiceASpeakerVoiceId() || getVoiceBSpeakerVoiceId())
@@ -72,6 +76,12 @@ export default function DebateCard() {
         </div>
         
         <div className="mt-6 pt-6" style={{ borderTop: '1px solid rgba(9, 37, 52, 0.1)' }}>
+          {state.resolutionText && (
+            <div className="mb-6 p-4 rounded-lg bg-white/60 text-sm leading-relaxed" style={{ color: 'var(--deep-space)' }}>
+              <p className="font-semibold mb-2" style={{ color: 'var(--cerulean)' }}>Resolution summary</p>
+              <div className="whitespace-pre-wrap">{state.resolutionText}</div>
+            </div>
+          )}
           {canPlayDebate && (
             <div className="mb-4">
               <button
@@ -89,10 +99,13 @@ export default function DebateCard() {
           )}
           <p className="text-sm font-medium mb-4" style={{ color: 'var(--cerulean)' }}>Where do you want to go from here?</p>
           <div className="flex flex-wrap gap-3">
-            <button className="choice-btn">Follow {framework?.voiceA?.name}</button>
-            <button className="choice-btn">Follow {framework?.voiceB?.name}</button>
-            <button className="choice-btn" onClick={continueDebate} disabled={state.isDebating}>
-              {state.isDebating ? 'Debating...' : 'Continue Debate'}
+            <button className="choice-btn" onClick={() => setSelectedBranch('ethos')}>Follow {framework?.voiceA?.name}</button>
+            <button className="choice-btn" onClick={() => setSelectedBranch('ego')}>Follow {framework?.voiceB?.name}</button>
+            <button className="choice-btn" onClick={continueDebate} disabled={state.isDebating || atRoundLimit}>
+              {state.isDebating ? 'Debating...' : atRoundLimit ? `Round limit (${maxRounds})` : 'Continue Debate'}
+            </button>
+            <button className="choice-btn" onClick={() => fetchResolution()} disabled={isResolving || !hasRealResponses}>
+              {isResolving ? 'Generating…' : 'End exchange & get summary'}
             </button>
             <button className="choice-btn">Explore Both</button>
           </div>

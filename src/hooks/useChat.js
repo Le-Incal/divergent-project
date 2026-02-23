@@ -2,8 +2,9 @@ import { useState, useCallback } from 'react'
 import { useApp, PROVIDERS } from '../context/AppContext'
 
 export function useChat() {
-  const { state, dispatch, getActiveFramework, getVoiceAProvider, getVoiceBProvider } = useApp()
+  const { state, dispatch, getActiveFramework, getVoiceAProvider, getVoiceBProvider, setResolution } = useApp()
   const [isStreaming, setIsStreaming] = useState({ voiceA: false, voiceB: false })
+  const [isResolving, setIsResolving] = useState(false)
 
   const sendMessage = useCallback(async (message) => {
     const framework = getActiveFramework()
@@ -17,16 +18,22 @@ export function useChat() {
     
     setIsStreaming({ voiceA: true, voiceB: true })
 
+    const isEthosEgo = framework.id === 'ethos-ego'
     const streamVoice = async (voice, voiceKey, setterAction, provider) => {
       try {
+        const body = isEthosEgo
+          ? {
+              message,
+              voice: voiceKey === 'voiceA' ? 'ethos' : 'ego',
+              mode: state.mode,
+              appendTransition: state.selectedBranch === (voiceKey === 'voiceA' ? 'ethos' : 'ego') ? (voiceKey === 'voiceA' ? 'ethos' : 'ego') : null,
+              voiceName: voice.name,
+            }
+          : { message, systemPrompt: voice.systemPrompt, voiceName: voice.name }
         const response = await fetch(provider.endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            message,
-            systemPrompt: voice.systemPrompt,
-            voiceName: voice.name,
-          }),
+          body: JSON.stringify(body),
         })
 
         if (!response.ok) throw new Error('API request failed')
@@ -71,7 +78,7 @@ export function useChat() {
     ])
 
     dispatch({ type: 'STOP_LOADING' })
-  }, [dispatch, getActiveFramework, getVoiceAProvider, getVoiceBProvider])
+  }, [dispatch, getActiveFramework, getVoiceAProvider, getVoiceBProvider, state.mode, state.selectedBranch])
 
   const continueDebate = useCallback(async () => {
     const framework = getActiveFramework()
@@ -93,15 +100,25 @@ ${state.debateMessages.map(m => `${m.name}: ${m.text}`).join('\n')}
       ? { voice: framework.voiceA, key: 'A', provider: providerA }
       : { voice: framework.voiceB, key: 'B', provider: providerB }
 
+    const isEthosEgo = framework.id === 'ethos-ego'
+    const debateBody = isEthosEgo
+      ? {
+          message: `Continue the debate. Respond to the other voice's points. Be direct and challenge their argument. Context:\n${context}`,
+          voice: nextSpeaker.key === 'A' ? 'ethos' : 'ego',
+          mode: state.mode,
+          appendTransition: state.selectedBranch === (nextSpeaker.key === 'A' ? 'ethos' : 'ego') ? (nextSpeaker.key === 'A' ? 'ethos' : 'ego') : null,
+          voiceName: nextSpeaker.voice.name,
+        }
+      : {
+          message: `Continue the debate. Respond to the other voice's points. Be direct and challenge their argument. Context:\n${context}`,
+          systemPrompt: nextSpeaker.voice.systemPrompt + '\n\nKeep your response concise - 2-3 sentences max. Be punchy and provocative.',
+          voiceName: nextSpeaker.voice.name,
+        }
     try {
       const response = await fetch(nextSpeaker.provider.endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: `Continue the debate. Respond to the other voice's points. Be direct and challenge their argument. Context:\n${context}`,
-          systemPrompt: nextSpeaker.voice.systemPrompt + '\n\nKeep your response concise - 2-3 sentences max. Be punchy and provocative.',
-          voiceName: nextSpeaker.voice.name,
-        }),
+        body: JSON.stringify(debateBody),
       })
 
       const reader = response.body.getReader()
@@ -137,7 +154,40 @@ ${state.debateMessages.map(m => `${m.name}: ${m.text}`).join('\n')}
     } finally {
       dispatch({ type: 'SET_DEBATING', payload: false })
     }
-  }, [dispatch, getActiveFramework, getVoiceAProvider, getVoiceBProvider, state.voiceAResponse, state.voiceBResponse, state.debateMessages])
+  }, [dispatch, getActiveFramework, getVoiceAProvider, getVoiceBProvider, state.voiceAResponse, state.voiceBResponse, state.debateMessages, state.mode, state.selectedBranch])
 
-  return { sendMessage, continueDebate, isStreaming }
+  const fetchResolution = useCallback(async (triggerReason = 'user request') => {
+    const framework = getActiveFramework()
+    const conversationHistory = [
+      ...(state.voiceAResponse ? [{ name: framework?.voiceA?.name, text: state.voiceAResponse }] : []),
+      ...(state.voiceBResponse ? [{ name: framework?.voiceB?.name, text: state.voiceBResponse }] : []),
+      ...state.debateMessages.map((m) => ({ name: m.name, text: m.text })),
+    ]
+    if (conversationHistory.length === 0) return
+    setIsResolving(true)
+    try {
+      const res = await fetch('/api/resolution', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mode: state.mode,
+          userQuestion: state.userInput || 'User question',
+          personaPair: framework?.id === 'ethos-ego' ? 'Ethos/Ego' : framework?.name,
+          rounds: 1 + Math.floor(state.debateMessages.length / 2),
+          conversationHistory,
+          triggerReason,
+        }),
+      })
+      if (!res.ok) throw new Error('Resolution failed')
+      const data = await res.json()
+      setResolution(data.resolution || '')
+    } catch (e) {
+      console.error('Resolution error:', e)
+      setResolution('*Could not generate resolution summary.*')
+    } finally {
+      setIsResolving(false)
+    }
+  }, [state.voiceAResponse, state.voiceBResponse, state.debateMessages, state.userInput, state.mode, getActiveFramework, setResolution])
+
+  return { sendMessage, continueDebate, fetchResolution, isStreaming, isResolving }
 }

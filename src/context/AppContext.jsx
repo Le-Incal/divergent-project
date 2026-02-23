@@ -222,6 +222,8 @@ const initialState = {
   voiceBResponse: null,
   debateMessages: [],
   isDebating: false,
+  selectedBranch: null, // 'ethos' | 'ego' | null; when set, ST-1/ST-2 appended for that voice
+  resolutionText: null, // O-2 neutral summary when exchange ends
 }
 
 const DEFAULT_PROVIDER_FALLBACK = DEFAULT_MODE_PROVIDERS[0] ?? 'claude'
@@ -271,7 +273,11 @@ const reducer = (state, action) => {
     case 'SET_DEBATING':
       return { ...state, isDebating: action.payload }
     case 'CLEAR_RESPONSES':
-      return { ...state, voiceAResponse: null, voiceBResponse: null, debateMessages: [], userInput: '' }
+      return { ...state, voiceAResponse: null, voiceBResponse: null, debateMessages: [], userInput: '', selectedBranch: null, resolutionText: null }
+    case 'SET_SELECTED_BRANCH':
+      return { ...state, selectedBranch: action.payload }
+    case 'SET_RESOLUTION':
+      return { ...state, resolutionText: action.payload }
     default:
       return state
   }
@@ -321,6 +327,8 @@ export function AppProvider({ children }) {
     setVoiceAVoice: (id) => dispatch({ type: 'SET_VOICE_A_VOICE', payload: id }),
     setVoiceBVoice: (id) => dispatch({ type: 'SET_VOICE_B_VOICE', payload: id }),
     setDebateOverlap: (value) => dispatch({ type: 'SET_DEBATE_OVERLAP', payload: value }),
+    setSelectedBranch: (branch) => dispatch({ type: 'SET_SELECTED_BRANCH', payload: branch }),
+    setResolution: (text) => dispatch({ type: 'SET_RESOLUTION', payload: text }),
   }
   
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>

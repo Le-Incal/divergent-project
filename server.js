@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import { resolveSystemPrompt, getResolutionPrompt } from './promptLoader.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -15,10 +16,27 @@ app.use(express.json());
 // Serve static files from the dist folder
 app.use(express.static(join(__dirname, 'dist')));
 
+// Resolve system prompt: use file-based prompts for Ethos/Ego when voice+mode provided
+async function getSystemPrompt(body) {
+  if (body.voice && body.mode) {
+    const loaded = await resolveSystemPrompt({
+      voice: body.voice,
+      mode: body.mode,
+      appendTransition: body.appendTransition || null,
+    });
+    if (loaded) return loaded;
+  }
+  return body.systemPrompt || null;
+}
+
 // Claude API endpoint
 app.post('/api/chat-claude', async (req, res) => {
   try {
-    const { message, systemPrompt, voiceName } = req.body;
+    const { message, voiceName } = req.body;
+    const systemPrompt = await getSystemPrompt(req.body);
+    if (!systemPrompt) {
+      return res.status(400).json({ error: 'Missing systemPrompt or voice+mode' });
+    }
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -92,7 +110,11 @@ app.post('/api/chat-claude', async (req, res) => {
 // OpenAI API endpoint
 app.post('/api/chat-openai', async (req, res) => {
   try {
-    const { message, systemPrompt, voiceName } = req.body;
+    const { message, voiceName } = req.body;
+    const systemPrompt = await getSystemPrompt(req.body);
+    if (!systemPrompt) {
+      return res.status(400).json({ error: 'Missing systemPrompt or voice+mode' });
+    }
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -164,7 +186,11 @@ app.post('/api/chat-openai', async (req, res) => {
 // Gemini API endpoint
 app.post('/api/chat-gemini', async (req, res) => {
   try {
-    const { message, systemPrompt, voiceName } = req.body;
+    const { message, voiceName } = req.body;
+    const systemPrompt = await getSystemPrompt(req.body);
+    if (!systemPrompt) {
+      return res.status(400).json({ error: 'Missing systemPrompt or voice+mode' });
+    }
 
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:streamGenerateContent?key=${process.env.GOOGLE_API_KEY}&alt=sse`,
@@ -224,6 +250,138 @@ app.post('/api/chat-gemini', async (req, res) => {
     res.end();
   } catch (error) {
     console.error('Gemini handler error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Grok (xAI) API endpoint - OpenAI-compatible
+app.post('/api/chat-grok', async (req, res) => {
+  try {
+    const { message, voiceName } = req.body;
+    const systemPrompt = await getSystemPrompt(req.body);
+    if (!systemPrompt) {
+      return res.status(400).json({ error: 'Missing systemPrompt or voice+mode' });
+    }
+
+    const response = await fetch('https://api.x.ai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.XAI_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: 'grok-2',
+        stream: true,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: message },
+        ],
+        max_tokens: 1024,
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      console.error('Grok API error:', error);
+      return res.status(response.status).json({ error: 'Grok API request failed' });
+    }
+
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value);
+        const lines = chunk.split('\n');
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const data = line.slice(6);
+            if (data === '[DONE]') continue;
+
+            try {
+              const parsed = JSON.parse(data);
+              const text = parsed.choices?.[0]?.delta?.content || '';
+              if (text) {
+                res.write(`data: ${JSON.stringify({ text, voice: voiceName })}\n\n`);
+              }
+            } catch (e) {
+              // Skip invalid JSON
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Stream error:', error);
+    }
+
+    res.write('data: [DONE]\n\n');
+    res.end();
+  } catch (error) {
+    console.error('Grok handler error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// O-2 Resolution: generate neutral summary when exchange ends
+app.post('/api/resolution', async (req, res) => {
+  try {
+    const { mode, userQuestion, personaPair, rounds, conversationHistory, triggerReason } = req.body;
+    if (!userQuestion || !conversationHistory || !Array.isArray(conversationHistory)) {
+      return res.status(400).json({ error: 'Missing userQuestion or conversationHistory' });
+    }
+
+    const resolutionPrompt = await getResolutionPrompt();
+    const contextBlock = `
+RESOLUTION CONTEXT:
+- Mode: ${mode || 'Default'}
+- User's original question: ${userQuestion}
+- Active persona pair: ${personaPair || 'Ethos/Ego'}
+- Number of rounds completed: ${rounds ?? 0}
+- Full conversation history:
+${conversationHistory.map((m) => `${m.name || m.speaker}: ${m.text}`).join('\n')}
+- Trigger reason: ${triggerReason || 'user request'}
+`.trim();
+
+    // Use Claude for resolution (neutral narrator); could be configurable
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) {
+      return res.status(503).json({ error: 'Resolution requires ANTHROPIC_API_KEY' });
+    }
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1024,
+        system: resolutionPrompt,
+        messages: [{ role: 'user', content: contextBlock }],
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      console.error('Resolution API error:', error);
+      return res.status(response.status).json({ error: 'Resolution request failed' });
+    }
+
+    const data = await response.json();
+    const text = data.content?.[0]?.text ?? '';
+    res.json({ resolution: text });
+  } catch (error) {
+    console.error('Resolution handler error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
