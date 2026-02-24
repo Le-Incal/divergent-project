@@ -372,7 +372,7 @@ a:hover { color: var(--ink); text-decoration-color: var(--link-underline-hover);
   padding-left: 160px;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
+  justify-content: space-between;
   padding-top: var(--landing-content-base-pad);
 }
 
@@ -437,10 +437,10 @@ a:hover { color: var(--ink); text-decoration-color: var(--link-underline-hover);
 }
 
 .landingCta {
-  margin-top: var(--space-8);
+  margin-top: auto;
+  padding-top: var(--space-5);
   opacity: 0;
   animation: fadeUp 0.8s var(--ease-out) 1s forwards;
-  transform: translateY(var(--landing-cta-offset, 0px));
 }
 .landingCtaTagline {
   font-family: var(--font-primary);

@@ -22,7 +22,6 @@ export default function LandingPage({ onEnter }) {
     const titleLayer = titleLayerRef.current
     const titleText = titleTextRef.current
     const imageFrame = imageFrameRef.current
-    const ctaArea = ctaAreaRef.current
     const contentCol = contentColRef.current
 
     if (!hero || !titleLayer || !titleText || !imageFrame || !contentCol) return
@@ -32,7 +31,7 @@ export default function LandingPage({ onEnter }) {
     const align = () => {
       if (isMobile()) {
         titleLayer.style.top = ''
-        ctaArea?.style.removeProperty('--landing-cta-offset')
+        contentCol.style.height = ''
         return
       }
 
@@ -45,15 +44,8 @@ export default function LandingPage({ onEnter }) {
       const titleOffset = parseFloat(getComputedStyle(hero).getPropertyValue('--landing-title-offset') || '0')
       titleLayer.style.top = `${imageTop - capOffset + titleOffset}px`
 
-      if (ctaArea) {
-        const frameRect2 = imageFrame.getBoundingClientRect()
-        const targetEl = ctaArea.querySelector('button, a') || ctaArea
-        const targetRect = targetEl.getBoundingClientRect()
-        const diff = frameRect2.bottom - targetRect.bottom
-        // Lock the CTA/button bottom to the image bottom by visually offsetting the CTA,
-        // without changing the body block positioning.
-        ctaArea.style.setProperty('--landing-cta-offset', `${diff}px`)
-      }
+      const imageBottom = frameRect.bottom - heroRect.top
+      contentCol.style.height = `${imageBottom}px`
     }
 
     const schedule = () => {
@@ -64,12 +56,8 @@ export default function LandingPage({ onEnter }) {
     const ro = new ResizeObserver(schedule)
     ro.observe(hero)
     ro.observe(imageFrame)
-    if (ctaArea) ro.observe(ctaArea)
-    if (ctaArea) {
-      const btn = ctaArea.querySelector('button, a')
-      if (btn) ro.observe(btn)
-    }
     ro.observe(titleText)
+    if (contentCol) ro.observe(contentCol)
 
     window.addEventListener('resize', schedule)
     const img = imageRef.current
@@ -120,11 +108,7 @@ export default function LandingPage({ onEnter }) {
                   Dual-mode AI externalizing internal dialogue. Two contrasting voices side-by-side, in debate will reveal
                   where your paths split.
                 </p>
-              </div>
-
-              <div className="landingBlock">
-                <div className="landingLabel">Why It</div>
-                <ul className="landingHypotheses">
+                <ul className="landingHypotheses" style={{ marginTop: 'var(--space-3)' }}>
                   <li>
                     <span className="landingHypNum">Hypothesis 01:</span> Complete worldviews can be created for AI
                   </li>
