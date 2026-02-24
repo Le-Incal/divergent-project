@@ -94,7 +94,7 @@ export default function LandingPage({ onEnter }) {
             <div className="landingImageFrame" id="imageFrame" ref={imageFrameRef}>
               <img ref={imageRef} src="/divergent-hero.jpg" alt="" loading="eager" decoding="async" />
               <div className="landingSubtitleOverlay" id="subtitleOverlay">
-                <span className="landingSubtitleText">EGO vs ETHOS</span>
+                <span className="landingSubtitleText"><span className="landingSubtitleStrong">EGO</span> vs <span className="landingSubtitleStrong">ETHOS</span></span>
               </div>
             </div>
             <p className="landingCaption">
