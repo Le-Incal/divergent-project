@@ -39,10 +39,11 @@ export default function LandingPage({ onEnter }) {
       const imageTop = frameRect.top - heroRect.top
       const fontSize = parseFloat(getComputedStyle(titleText).fontSize || '0')
       const capOffset = fontSize * 0.08
-      const offsetValue = getComputedStyle(hero).getPropertyValue('--landing-title-offset')?.trim() || '0'
-      const titleOffsetPx = offsetValue.endsWith('in')
-        ? parseFloat(offsetValue) * 96
-        : parseFloat(offsetValue)
+      const root = hero.closest('.landingPage') || hero
+      const raw = (getComputedStyle(root).getPropertyValue('--landing-title-offset') || '0').trim()
+      const num = parseFloat(raw)
+      const isInches = /in\s*$/i.test(raw)
+      const titleOffsetPx = isInches ? num * 96 : num
       titleLayer.style.top = `${imageTop - capOffset + titleOffsetPx}px`
     }
 
