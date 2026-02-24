@@ -348,7 +348,7 @@ a:hover { color: var(--ink); text-decoration-color: var(--link-underline-hover);
 .landingSubtitleOverlay {
   position: absolute;
   left: 50%;
-  transform: translateX(calc(-50% - 48px - 0.25in));
+  transform: translateX(calc(-50% - 48px - 0.125in)) translateY(5px);
   top: 33%;
   z-index: 1;
 }
