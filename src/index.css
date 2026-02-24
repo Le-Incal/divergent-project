@@ -80,6 +80,53 @@
   --duration-fast: 150ms;
   --duration-base: 280ms;
   --duration-slow: 500ms;
+
+  /* UI CHROME (derived, token-driven) */
+  --nav-bg: rgba(255,255,255,0.88);
+  --overlay-bg: rgba(0,0,0,0.35);
+  --panel-backdrop: rgba(0,0,0,0.30);
+  --glass-bg: rgba(255,255,255,0.72);
+  --glass-border: rgba(255,255,255,0.5);
+  --glass-sheen: linear-gradient(180deg, rgba(255,255,255,0.65) 0%, rgba(255,255,255,0.25) 40%, rgba(255,255,255,0.12) 100%);
+  --panel-surface-1: rgba(255,255,255,0.45);
+  --panel-surface-2: rgba(255,255,255,0.70);
+  --panel-border: rgba(15,15,15,0.10);
+  --panel-border-strong: rgba(15,15,15,0.22);
+  --modal-bg: rgba(255,255,255,0.92);
+  --shadow-hover: 0 4px 20px rgba(0,0,0,0.04);
+  --link-underline: rgba(15, 15, 15, 0.35);
+  --link-underline-hover: rgba(15, 15, 15, 0.7);
+  --selection-text: var(--ink);
+}
+
+/* Sandpit: invert to dark mode */
+[data-mode="sandpit"] {
+  --ink: #f5f5f5;
+  --ink-secondary: #d6d6d6;
+  --ink-tertiary: #a8a8a8;
+  --ink-ghost: #7b7b7b;
+
+  --surface: #0f0f0f;
+  --surface-warm: #141414;
+  --surface-muted: #1a1a1a;
+  --surface-dim: #242424;
+  --border-subtle: #2a2a2a;
+  --border-medium: #3a3a3a;
+
+  --nav-bg: rgba(15,15,15,0.78);
+  --panel-backdrop: rgba(0,0,0,0.55);
+  --glass-bg: rgba(15,15,15,0.72);
+  --glass-border: rgba(255,255,255,0.10);
+  --glass-sheen: linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 45%, rgba(255,255,255,0.02) 100%);
+  --panel-surface-1: rgba(255,255,255,0.06);
+  --panel-surface-2: rgba(255,255,255,0.10);
+  --panel-border: rgba(255,255,255,0.10);
+  --panel-border-strong: rgba(255,255,255,0.18);
+  --modal-bg: rgba(15,15,15,0.92);
+  --shadow-hover: 0 4px 20px rgba(0,0,0,0.35);
+  --link-underline: rgba(245, 245, 245, 0.32);
+  --link-underline-hover: rgba(245, 245, 245, 0.62);
+  --selection-text: #0f0f0f;
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -101,16 +148,16 @@ body {
   overflow-x: hidden;
   line-height: 1.65;
 }
-::selection { background: var(--accent); color: var(--ink); }
+::selection { background: var(--accent); color: var(--selection-text); }
 
 a {
   color: inherit;
   text-decoration: underline;
-  text-decoration-color: rgba(15, 15, 15, 0.35);
+  text-decoration-color: var(--link-underline);
   text-underline-offset: 3px;
   transition: text-decoration-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
 }
-a:hover { color: var(--ink); text-decoration-color: rgba(15, 15, 15, 0.7); }
+a:hover { color: var(--ink); text-decoration-color: var(--link-underline-hover); }
 
 /* No blue rings anywhere: show an ink outline instead. */
 :focus { outline: none; }
@@ -167,7 +214,7 @@ a:hover { color: var(--ink); text-decoration-color: rgba(15, 15, 15, 0.7); }
 .card:hover {
   border-color: var(--border-medium);
   transform: translateY(-1px);
-  box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+  box-shadow: var(--shadow-hover);
 }
 
 .input {
@@ -202,10 +249,10 @@ a:hover { color: var(--ink); text-decoration-color: rgba(15, 15, 15, 0.7); }
 
 /* Glass panels (gradient sections only) */
 .glass {
-  background: rgba(255,255,255,0.72);
+  background: var(--glass-bg);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255,255,255,0.5);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-md);
 }
 
@@ -453,7 +500,7 @@ a:hover { color: var(--ink); text-decoration-color: rgba(15, 15, 15, 0.7); }
   left: 0;
   right: 0;
   z-index: 120;
-  background: rgba(255,255,255,0.88);
+  background: var(--nav-bg);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid transparent;
@@ -511,7 +558,7 @@ a:hover { color: var(--ink); text-decoration-color: rgba(15, 15, 15, 0.7); }
   position: fixed;
   inset: 0;
   z-index: 140;
-  background: rgba(0,0,0,0.30);
+  background: var(--panel-backdrop);
   border: 0;
 }
 .panel {
@@ -523,10 +570,10 @@ a:hover { color: var(--ink); text-decoration-color: rgba(15, 15, 15, 0.7); }
   z-index: 150;
   overflow: auto;
 
-  background: rgba(255,255,255,0.72);
+  background: var(--glass-bg);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255,255,255,0.5);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-md);
   padding: var(--space-6);
 }
@@ -536,7 +583,7 @@ a:hover { color: var(--ink); text-decoration-color: rgba(15, 15, 15, 0.7); }
   inset: 0;
   border-radius: var(--radius-md);
   pointer-events: none;
-  background: linear-gradient(180deg, rgba(255,255,255,0.65) 0%, rgba(255,255,255,0.25) 40%, rgba(255,255,255,0.12) 100%);
+  background: var(--glass-sheen);
   opacity: 0.55;
 }
 .panel > * { position: relative; z-index: 1; }
@@ -547,7 +594,7 @@ a:hover { color: var(--ink); text-decoration-color: rgba(15, 15, 15, 0.7); }
   justify-content: space-between;
   gap: var(--space-5);
   padding-bottom: var(--space-4);
-  border-bottom: 1px solid rgba(15,15,15,0.10);
+  border-bottom: 1px solid var(--panel-border);
 }
 .panelTitle {
   font-family: var(--font-primary);
@@ -565,8 +612,8 @@ a:hover { color: var(--ink); text-decoration-color: rgba(15, 15, 15, 0.7); }
 .panelTab {
   padding: 10px 12px;
   border-radius: var(--radius-md);
-  border: 1px solid rgba(15,15,15,0.10);
-  background: rgba(255,255,255,0.45);
+  border: 1px solid var(--panel-border);
+  background: var(--panel-surface-1);
   font-family: var(--font-mono);
   font-size: var(--text-xs);
   letter-spacing: 0.14em;
@@ -575,10 +622,10 @@ a:hover { color: var(--ink); text-decoration-color: rgba(15, 15, 15, 0.7); }
   cursor: pointer;
   transition: border-color var(--duration-fast) var(--ease-out), background var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
 }
-.panelTab:hover { border-color: rgba(15,15,15,0.22); color: var(--ink); }
+.panelTab:hover { border-color: var(--panel-border-strong); color: var(--ink); }
 .panelTab.isActive {
-  border-color: rgba(15,15,15,0.28);
-  background: rgba(255,255,255,0.70);
+  border-color: var(--panel-border-strong);
+  background: var(--panel-surface-2);
   color: var(--ink);
 }
 .panelBody { padding-top: var(--space-6); }
@@ -612,7 +659,7 @@ a:hover { color: var(--ink); text-decoration-color: rgba(15, 15, 15, 0.7); }
 .panelToggle {
   padding: 10px 14px;
   border-radius: var(--radius-md);
-  border: 1px solid rgba(15,15,15,0.18);
+  border: 1px solid var(--panel-border-strong);
   background: transparent;
   font-family: var(--font-primary);
   font-size: var(--text-sm);
@@ -639,8 +686,8 @@ a:hover { color: var(--ink); text-decoration-color: rgba(15, 15, 15, 0.7); }
   width: 100%;
   padding: 10px 14px;
   border-radius: var(--radius-md);
-  border: 1px solid rgba(15,15,15,0.18);
-  background: rgba(255,255,255,0.62);
+  border: 1px solid var(--panel-border-strong);
+  background: var(--panel-surface-2);
   color: var(--ink);
   font-family: var(--font-primary);
   font-size: var(--text-base);
@@ -671,13 +718,13 @@ a:hover { color: var(--ink); text-decoration-color: rgba(15, 15, 15, 0.7); }
   text-align: left;
   padding: var(--space-4);
   border-radius: var(--radius-md);
-  border: 1px solid rgba(15,15,15,0.10);
-  background: rgba(255,255,255,0.45);
+  border: 1px solid var(--panel-border);
+  background: var(--panel-surface-1);
   cursor: pointer;
   transition: border-color var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out), background var(--duration-fast) var(--ease-out);
 }
-.historyItem:hover { border-color: rgba(15,15,15,0.22); transform: translateY(-1px); }
-.historyItem.isActive { border-color: rgba(15,15,15,0.28); background: rgba(255,255,255,0.70); }
+.historyItem:hover { border-color: var(--panel-border-strong); transform: translateY(-1px); }
+.historyItem.isActive { border-color: var(--panel-border-strong); background: var(--panel-surface-2); }
 .historyTitle {
   font-family: var(--font-primary);
   font-size: var(--text-base);
@@ -925,13 +972,13 @@ a:hover { color: var(--ink); text-decoration-color: rgba(15, 15, 15, 0.7); }
   display: grid;
   place-items: center;
   padding: var(--space-5);
-  background: rgba(0,0,0,0.35);
+  background: var(--overlay-bg);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
 }
 .modalPanel {
   width: min(520px, 100%);
-  background: rgba(255,255,255,0.92);
+  background: var(--modal-bg);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
   padding: var(--space-7);
