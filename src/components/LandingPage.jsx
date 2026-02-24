@@ -112,15 +112,15 @@ export default function LandingPage({ onEnter }) {
                 <ul className="landingHypotheses" style={{ marginTop: 'var(--space-4)' }}>
                   <li>
                     <span className="landingHypHighlight"><span className="landingHypNum">Hypothesis 01:</span></span>{' '}
-                    AI voices can be built from epistemological operating systems,<br />not just personality traits.
+                    AI voices can be built from epistemological operating systems, not just personality traits.
                   </li>
                   <li>
                     <span className="landingHypHighlight"><span className="landingHypNum">Hypothesis 02:</span></span>{' '}
-                    Inverse reasoning architectures can hold<br />structural separation under pressure.
+                    Inverse reasoning architectures can hold structural separation under pressure.
                   </li>
                   <li>
                     <span className="landingHypHighlight"><span className="landingHypNum">Hypothesis 03:</span></span>{' '}
-                    Genuine tension produces better decisions than consensus<br />or single-perspective advice.
+                    Genuine tension produces better decisions than consensus or single-perspective advice.
                   </li>
                 </ul>
               </div>
