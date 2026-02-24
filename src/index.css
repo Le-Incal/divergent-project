@@ -436,6 +436,10 @@ a:hover { color: var(--ink); text-decoration-color: var(--link-underline-hover);
   line-height: 1.7;
   text-wrap: balance;
 }
+.landingHypLabel {
+  display: block;
+  margin-bottom: var(--space-2);
+}
 .landingHypHighlight {
   background: #d4ed9e;
   box-decoration-break: clone;
