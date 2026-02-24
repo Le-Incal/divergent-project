@@ -285,6 +285,7 @@ a:hover { color: var(--ink); text-decoration-color: var(--link-underline-hover);
   align-items: center;
   justify-content: center;
   padding: var(--space-9);
+  overflow-x: hidden;
   --landing-title-offset: 0.5in;
   --landing-content-base-pad: calc(14rem + 2in);
 }
@@ -292,12 +293,17 @@ a:hover { color: var(--ink); text-decoration-color: var(--link-underline-hover);
   max-width: var(--max-width);
   margin: 0 auto;
   width: 100%;
+  min-width: 0;
 }
 .landingHero {
   position: relative;
   display: grid;
   grid-template-columns: 42% 58%;
   align-items: start;
+  min-width: 0;
+}
+.landingHero > * {
+  min-width: 0;
 }
 
 .landingTitleLayer {
@@ -373,8 +379,9 @@ a:hover { color: var(--ink); text-decoration-color: var(--link-underline-hover);
   padding-left: 160px;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
+  justify-content: space-between;
   padding-top: var(--landing-content-base-pad);
+  min-width: 0;
 }
 
 .landingBlocks {
@@ -438,8 +445,8 @@ a:hover { color: var(--ink); text-decoration-color: var(--link-underline-hover);
 }
 
 .landingCta {
-  margin-top: var(--space-6);
-  padding-top: 0;
+  margin-top: auto;
+  padding-top: var(--space-3);
   opacity: 0;
   animation: fadeUp 0.8s var(--ease-out) 1s forwards;
 }
@@ -466,7 +473,8 @@ a:hover { color: var(--ink); text-decoration-color: var(--link-underline-hover);
   .landingTitleLayer { position: relative; top: auto !important; margin-bottom: var(--space-4); }
   .landingTitleText { font-size: calc(clamp(3.5rem, 14vw, 6rem) - 5pt); padding-left: 0; }
   .landingImageFrame { max-width: 100%; }
-  .landingContentCol { padding-left: 0; padding-top: var(--space-6); }
+  .landingContentCol { padding-left: 0; padding-top: var(--space-6); justify-content: flex-start; }
+  .landingCta { margin-top: var(--space-6); }
 }
 
 @media (max-width: 600px) {

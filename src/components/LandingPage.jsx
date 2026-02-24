@@ -22,8 +22,9 @@ export default function LandingPage({ onEnter }) {
     const titleLayer = titleLayerRef.current
     const titleText = titleTextRef.current
     const imageFrame = imageFrameRef.current
+    const contentCol = contentColRef.current
 
-    if (!hero || !titleLayer || !titleText || !imageFrame) return
+    if (!hero || !titleLayer || !titleText || !imageFrame || !contentCol) return
 
     let raf = 0
     const isMobile = () => window.matchMedia?.('(max-width: 960px)')?.matches ?? false
@@ -31,6 +32,7 @@ export default function LandingPage({ onEnter }) {
       if (isMobile()) {
         titleLayer.style.removeProperty('--landing-title-base')
         titleLayer.style.removeProperty('--landing-title-offset')
+        contentCol.style.height = ''
         return
       }
 
@@ -38,6 +40,7 @@ export default function LandingPage({ onEnter }) {
       const frameRect = imageFrame.getBoundingClientRect()
 
       const imageTop = frameRect.top - heroRect.top
+      const imageBottom = frameRect.bottom - heroRect.top
       const fontSize = parseFloat(getComputedStyle(titleText).fontSize || '0')
       const capOffset = fontSize * 0.08
       const basePx = imageTop - capOffset
@@ -45,6 +48,7 @@ export default function LandingPage({ onEnter }) {
       const offsetValue = root ? getComputedStyle(root).getPropertyValue('--landing-title-offset').trim() || '0.5in' : '0.5in'
       titleLayer.style.setProperty('--landing-title-base', `${basePx}px`)
       titleLayer.style.setProperty('--landing-title-offset', offsetValue)
+      contentCol.style.height = `${imageBottom}px`
     }
 
     const schedule = () => {
@@ -56,6 +60,7 @@ export default function LandingPage({ onEnter }) {
     ro.observe(hero)
     ro.observe(imageFrame)
     ro.observe(titleText)
+    ro.observe(contentCol)
 
     window.addEventListener('resize', schedule)
     const img = imageRef.current
