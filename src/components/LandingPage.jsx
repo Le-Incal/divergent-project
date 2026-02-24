@@ -22,16 +22,14 @@ export default function LandingPage({ onEnter }) {
     const titleLayer = titleLayerRef.current
     const titleText = titleTextRef.current
     const imageFrame = imageFrameRef.current
-    const contentCol = contentColRef.current
 
-    if (!hero || !titleLayer || !titleText || !imageFrame || !contentCol) return
+    if (!hero || !titleLayer || !titleText || !imageFrame) return
 
     let raf = 0
     const isMobile = () => window.matchMedia?.('(max-width: 960px)')?.matches ?? false
     const align = () => {
       if (isMobile()) {
         titleLayer.style.top = ''
-        contentCol.style.height = ''
         return
       }
 
@@ -43,9 +41,6 @@ export default function LandingPage({ onEnter }) {
       const capOffset = fontSize * 0.08
       const titleOffset = parseFloat(getComputedStyle(hero).getPropertyValue('--landing-title-offset') || '0')
       titleLayer.style.top = `${imageTop - capOffset + titleOffset}px`
-
-      const imageBottom = frameRect.bottom - heroRect.top
-      contentCol.style.height = `${imageBottom}px`
     }
 
     const schedule = () => {
@@ -57,7 +52,6 @@ export default function LandingPage({ onEnter }) {
     ro.observe(hero)
     ro.observe(imageFrame)
     ro.observe(titleText)
-    if (contentCol) ro.observe(contentCol)
 
     window.addEventListener('resize', schedule)
     const img = imageRef.current
