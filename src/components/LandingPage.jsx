@@ -6,6 +6,7 @@ export default function LandingPage({ onEnter }) {
   const titleLayerRef = useRef(null)
   const titleTextRef = useRef(null)
   const imageFrameRef = useRef(null)
+  const imageRef = useRef(null)
   const ctaAreaRef = useRef(null)
   const contentColRef = useRef(null)
 
@@ -49,10 +50,12 @@ export default function LandingPage({ onEnter }) {
         const basePad = getComputedStyle(hero).getPropertyValue('--landing-content-base-pad')?.trim() || '14rem'
         contentCol.style.setProperty('--hero-content-pad-top', basePad)
         const frameRect2 = imageFrame.getBoundingClientRect()
-        const ctaRect = ctaArea.getBoundingClientRect()
-        const diff = frameRect2.bottom - ctaRect.bottom
+        const targetEl = ctaArea.querySelector('button, a') || ctaArea
+        const targetRect = targetEl.getBoundingClientRect()
+        const diff = frameRect2.bottom - targetRect.bottom
         const basePadPx = parseFloat(getComputedStyle(contentCol).paddingTop || '0')
-        contentCol.style.setProperty('--hero-content-pad-top', `${Math.max(basePadPx + diff, basePadPx)}px`)
+        const lockedPadPx = Math.max(0, basePadPx + diff)
+        contentCol.style.setProperty('--hero-content-pad-top', `${lockedPadPx}px`)
       }
     }
 
@@ -65,8 +68,12 @@ export default function LandingPage({ onEnter }) {
     ro.observe(hero)
     ro.observe(imageFrame)
     if (ctaArea) ro.observe(ctaArea)
+    ro.observe(contentCol)
+    ro.observe(titleText)
 
     window.addEventListener('resize', schedule)
+    const img = imageRef.current
+    img?.addEventListener?.('load', schedule, { once: true })
 
     schedule()
     const t1 = window.setTimeout(schedule, 300)
@@ -78,6 +85,7 @@ export default function LandingPage({ onEnter }) {
       window.clearTimeout(t1)
       window.clearTimeout(t2)
       cancelAnimationFrame(raf)
+      img?.removeEventListener?.('load', schedule)
     }
   }, [])
 
@@ -93,7 +101,7 @@ export default function LandingPage({ onEnter }) {
 
           <div className="landingImageCol">
             <div className="landingImageFrame" id="imageFrame" ref={imageFrameRef}>
-              <img src="/divergent-hero.jpg" alt="" loading="eager" decoding="async" />
+              <img ref={imageRef} src="/divergent-hero.jpg" alt="" loading="eager" decoding="async" />
               <div className="landingSubtitleOverlay" id="subtitleOverlay">
                 <span className="landingSubtitleText">EGO vs ETHOS</span>
               </div>
