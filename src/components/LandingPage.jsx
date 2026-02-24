@@ -1,7 +1,13 @@
-import { useState } from 'react'
+import { useLayoutEffect, useRef, useState } from 'react'
 
 export default function LandingPage({ onEnter }) {
   const [isEntering, setIsEntering] = useState(false)
+  const heroRef = useRef(null)
+  const titleLayerRef = useRef(null)
+  const titleTextRef = useRef(null)
+  const imageFrameRef = useRef(null)
+  const ctaAreaRef = useRef(null)
+  const contentColRef = useRef(null)
 
   const handleEnter = () => {
     if (isEntering) return
@@ -10,44 +16,133 @@ export default function LandingPage({ onEnter }) {
     window.setTimeout(() => onEnter?.(), 280)
   }
 
+  useLayoutEffect(() => {
+    const hero = heroRef.current
+    const titleLayer = titleLayerRef.current
+    const titleText = titleTextRef.current
+    const imageFrame = imageFrameRef.current
+    const ctaArea = ctaAreaRef.current
+    const contentCol = contentColRef.current
+
+    if (!hero || !titleLayer || !titleText || !imageFrame || !contentCol) return
+
+    let raf = 0
+    const isMobile = () => window.matchMedia?.('(max-width: 960px)')?.matches ?? false
+    const align = () => {
+      if (isMobile()) {
+        titleLayer.style.top = ''
+        contentCol.style.removeProperty('--hero-content-pad-top')
+        return
+      }
+
+      const heroRect = hero.getBoundingClientRect()
+      const frameRect = imageFrame.getBoundingClientRect()
+
+      const imageTop = frameRect.top - heroRect.top
+      const fontSize = parseFloat(getComputedStyle(titleText).fontSize || '0')
+      const capOffset = fontSize * 0.08
+      titleLayer.style.top = `${imageTop - capOffset}px`
+
+      if (ctaArea) {
+        // Reset to base padding to get a clean measurement.
+        contentCol.style.setProperty('--hero-content-pad-top', '14rem')
+        const frameRect2 = imageFrame.getBoundingClientRect()
+        const ctaRect = ctaArea.getBoundingClientRect()
+        const diff = frameRect2.bottom - ctaRect.bottom
+        const basePad = parseFloat(getComputedStyle(contentCol).paddingTop || '0')
+        contentCol.style.setProperty('--hero-content-pad-top', `${Math.max(basePad + diff, basePad)}px`)
+      }
+    }
+
+    const schedule = () => {
+      cancelAnimationFrame(raf)
+      raf = requestAnimationFrame(align)
+    }
+
+    const ro = new ResizeObserver(schedule)
+    ro.observe(hero)
+    ro.observe(imageFrame)
+    if (ctaArea) ro.observe(ctaArea)
+
+    window.addEventListener('resize', schedule)
+
+    schedule()
+    const t1 = window.setTimeout(schedule, 300)
+    const t2 = window.setTimeout(schedule, 800)
+
+    return () => {
+      window.removeEventListener('resize', schedule)
+      ro.disconnect()
+      window.clearTimeout(t1)
+      window.clearTimeout(t2)
+      cancelAnimationFrame(raf)
+    }
+  }, [])
+
   return (
-    <div className="landing-hero">
-      <div className="landing-overlay" />
-
-      <div className="landing-shell">
-        <div className="landing-content">
-          <div className="landing-kicker">Ethos vs Ego</div>
-
-          <h1 className="landing-title font-display">Divergent</h1>
-          <div className="landing-tagline">See where your paths diverge</div>
-
-          <div className="landing-blurb">
-            A dual-mode AI platform that externalizes the internal dialogue you have when facing a choice—two contrasting
-            voices side-by-side, then rounds of exchange to reveal where the paths split.
+    <div className="landingPage">
+      <div className="landingContainer">
+        <div className="landingHero" id="hero" ref={heroRef}>
+          <div className="landingTitleLayer" id="titleLayer" ref={titleLayerRef} aria-hidden="true">
+            <span className="landingTitleText" id="titleText" ref={titleTextRef}>
+              Divergent
+            </span>
           </div>
 
-          <div className="landing-cta">
-            <button
-              className={`landing-enter-btn ${isEntering ? 'is-entering' : ''}`}
-              onClick={handleEnter}
-              disabled={isEntering}
-            >
-              <span className="landing-enter-btn-text">Enter Divergent</span>
-              <span className="landing-enter-arrow-box" aria-hidden="true">
-                <span className="landing-enter-arrow">→</span>
-              </span>
-            </button>
+          <div className="landingImageCol">
+            <div className="landingImageFrame" id="imageFrame" ref={imageFrameRef}>
+              <img src="/divergent-hero.jpg" alt="" loading="eager" decoding="async" />
+              <div className="landingSubtitleOverlay" id="subtitleOverlay">
+                <span className="landingSubtitleText">EGO vs ETHOS</span>
+              </div>
+            </div>
+            <p className="landingCaption">
+              A worker torn between the devil of the strike and the angel of the law. A satirical commentary on labor unrest
+              in post-unification Italy. <em>Il Fischietto</em>, August 3, 1872. Used with Rights, Getty Images
+            </p>
           </div>
 
-          <div className="landing-fineprint">
-            Divergent is a decision tool that shows contrasting perspectives. It is not professional advice and does not
-            replace therapy, legal, financial, or medical counsel. In Sandpit mode, content is experimental and adversarial
-            by design.
-          </div>
-        </div>
+          <div className="landingContentCol" ref={contentColRef}>
+            <div className="landingBlocks">
+              <div className="landingBlock">
+                <div className="landingLabel">What This Is</div>
+                <p className="landingBody">
+                  Dual-mode AI externalizing internal dialogue. Two contrasting voices side-by-side, in debate will reveal
+                  where your paths split.
+                </p>
+              </div>
 
-        <div className="landing-credit">
-          Artwork used with rights held by the project owner.
+              <div className="landingBlock">
+                <div className="landingLabel">Why It</div>
+                <ul className="landingHypotheses">
+                  <li>
+                    <span className="landingHypNum">Hypothesis 01:</span> Complete worldviews can be created for AI
+                  </li>
+                  <li>
+                    <span className="landingHypNum">Hypothesis 02:</span> Worldviews can be used to build unique LLM personas
+                  </li>
+                  <li>
+                    <span className="landingHypNum">Hypothesis 03:</span> Opposing personas can organically debate each other
+                  </li>
+                </ul>
+              </div>
+
+              <div className="landingBlock">
+                <div className="landingLabel">Notice</div>
+                <p className="landingBody landingBodyNotice">
+                  Divergent is not professional advice and does not replace therapy, legal, financial, or medical counsel. In
+                  Sandpit mode content becomes unfiltered and adversarial by design.
+                </p>
+              </div>
+            </div>
+
+            <div className="landingCta" ref={ctaAreaRef}>
+              <p className="landingCtaTagline">See where your paths diverge</p>
+              <button type="button" className="btn btn-primary btn-arrow" onClick={handleEnter} disabled={isEntering}>
+                Enter Divergent
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>

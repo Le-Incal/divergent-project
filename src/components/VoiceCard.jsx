@@ -10,9 +10,9 @@ export default function VoiceCard({ voice, type, response, isLoading }) {
   const { getVoiceAProvider, getVoiceBProvider, getVoiceASpeakerVoiceId, getVoiceBSpeakerVoiceId } = useApp()
   const [isPlaying, setIsPlaying] = useState(false)
   const audioRef = useRef(null)
-  const isChallenger = type === 'challenger'
-  const provider = isChallenger ? getVoiceAProvider() : getVoiceBProvider()
-  const speakerVoiceId = isChallenger ? getVoiceASpeakerVoiceId() : getVoiceBSpeakerVoiceId()
+  const isLeftCard = type === 'challenger'
+  const provider = isLeftCard ? getVoiceAProvider() : getVoiceBProvider()
+  const speakerVoiceId = isLeftCard ? getVoiceASpeakerVoiceId() : getVoiceBSpeakerVoiceId()
 
   const handlePlay = async () => {
     if (!response || !speakerVoiceId || isPlaying) return
@@ -58,55 +58,43 @@ export default function VoiceCard({ voice, type, response, isLoading }) {
   }
   
   return (
-    <div className={`voice-card ${type}`}>
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-2">
-          <span className="text-lg font-semibold" style={{ letterSpacing: '-0.01em', color: isChallenger ? 'var(--icy-aqua)' : 'var(--jet-black)' }}>
-            {voice.name}
-          </span>
+    <section className="card voiceCard">
+      <header className="voiceCardHeader">
+        <div className="voiceCardTitle">
+          <div className="voiceCardName">{voice.name}</div>
+          <div className="voiceCardRole">{voice.role}</div>
         </div>
-        <div className="flex items-center gap-2">
+
+        <div className="voiceCardMeta">
+          <span className="voiceCardProvider">{provider?.name ?? ''}</span>
           {response && speakerVoiceId && (
             <button
               type="button"
               onClick={handlePlay}
               disabled={isPlaying}
-              className="w-8 h-8 rounded-md flex items-center justify-center transition-colors hover:bg-white/10 disabled:opacity-60"
-              style={{ color: isChallenger ? 'var(--icy-aqua)' : 'var(--jet-black)' }}
+              className="voiceCardPlay"
               aria-label={isPlaying ? 'Playing…' : 'Play'}
             >
               {isPlaying ? (
-                <span className="text-xs font-medium">…</span>
+                <span className="voiceCardPlayText">…</span>
               ) : (
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                   <path d="M8 5v14l11-7z" />
                 </svg>
               )}
             </button>
           )}
-          <div className="flex flex-col items-end gap-0.5">
-            <span className="text-[10px] font-normal opacity-60" style={{ color: 'inherit', letterSpacing: '0.02em' }}>
-              {provider?.name}
-            </span>
-            <span
-              className="text-xs font-normal"
-              style={{ color: isChallenger ? 'rgba(var(--icy-aqua-rgb), 0.62)' : 'rgba(var(--jet-black-rgb), 0.55)' }}
-            >
-              {voice.role}
-            </span>
-          </div>
         </div>
-      </div>
+      </header>
       
-      <div className="card-content">
+      <div className="voiceCardBody">
         {isLoading ? (
-          <div className="flex flex-col gap-3">
+          <div className="voiceCardSkeleton">
             {[90, 75, 85].map((w, i) => (
               <div
                 key={i}
-                className="h-4 rounded animate-pulse"
+                className="voiceCardSkeletonLine"
                 style={{
-                  background: isChallenger ? 'rgba(var(--icy-aqua-rgb), 0.22)' : 'rgba(var(--jet-black-rgb), 0.14)',
                   width: `${w}%`,
                 }}
               />
@@ -118,6 +106,6 @@ export default function VoiceCard({ voice, type, response, isLoading }) {
           <div style={{ height: '100%' }} />
         )}
       </div>
-    </div>
+    </section>
   )
 }

@@ -18,40 +18,23 @@ export default function InputArea() {
   }
   
   return (
-    <div className="mt-6 max-w-[900px] mx-auto w-full">
-      <form onSubmit={handleSubmit}>
-        <div className="input-wrapper flex items-center gap-3 p-2">
-          <input
-            type="text"
-            value={localInput}
-            onChange={(e) => setLocalInput(e.target.value)}
-            placeholder="Explore a new idea..."
-            className="flex-1 bg-transparent border-none outline-none text-sm px-3 py-2"
-            style={{ color: 'var(--jet-black)', letterSpacing: '-0.01em' }}
-            disabled={state.isLoading}
-          />
-          <button
-            type="submit"
-            disabled={state.isLoading || !localInput.trim()}
-            className="w-10 h-10 rounded-md flex items-center justify-center transition-all duration-200 disabled:opacity-50"
-            style={{
-              background:
-                state.mode === 'sandpit' ? 'rgba(var(--icy-aqua-rgb), 0.8)' : 'var(--yale-blue)',
-              color: state.mode === 'sandpit' ? 'var(--jet-black)' : 'var(--soft-white)',
-              border: state.mode === 'sandpit' ? '1px solid rgba(var(--jet-black-rgb), 0.18)' : 'none',
-            }}
-          >
-            {state.isLoading ? (
-              <svg className="animate-spin" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="12" cy="12" r="10" strokeOpacity="0.25"/><path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round"/>
-              </svg>
-            ) : (
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                <path d="M5 12h14M12 5l7 7-7 7"/>
-              </svg>
-            )}
-          </button>
-        </div>
+    <div className="inputArea">
+      <form onSubmit={handleSubmit} className="inputAreaForm">
+        <label className="srOnly" htmlFor="divergent-input">
+          Explore a new idea
+        </label>
+        <input
+          id="divergent-input"
+          className="input inputAreaField"
+          type="text"
+          value={localInput}
+          onChange={(e) => setLocalInput(e.target.value)}
+          placeholder="Explore a new idea…"
+          disabled={state.isLoading}
+        />
+        <button type="submit" className="btn btn-primary inputAreaSubmit btn-arrow" disabled={state.isLoading || !localInput.trim()}>
+          {state.isLoading ? 'Thinking…' : 'Send'}
+        </button>
       </form>
     </div>
   )
