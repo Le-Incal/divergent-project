@@ -1,5 +1,11 @@
 import { useLayoutEffect, useRef, useState } from 'react'
 
+function hypWords(text) {
+  return text.split(/(\s+)/).map((part, i) =>
+    part.trim().length === 0 ? part : <span key={i} className="landingHypSentence">{part}</span>
+  )
+}
+
 export default function LandingPage({ onEnter }) {
   const [isEntering, setIsEntering] = useState(false)
   const heroRef = useRef(null)
@@ -111,16 +117,16 @@ export default function LandingPage({ onEnter }) {
                 </p>
                 <ul className="landingHypotheses" style={{ marginTop: 'var(--space-4)' }}>
                   <li>
-                    <span className="landingHypHighlight"><span className="landingHypNum">H1:</span></span>{' '}
-                    <span className="landingHypSentence">AI voices can be built from epistemological operating systems, not just personality traits.</span>
+                    <span className="landingHypHighlight"><span className="landingHypNum">H1:</span></span>
+                    {hypWords(' AI voices can be built from epistemological operating systems, not just personality traits.')}
                   </li>
                   <li>
-                    <span className="landingHypHighlight"><span className="landingHypNum">H2:</span></span>{' '}
-                    <span className="landingHypSentence">Inverse reasoning architectures can hold structural separation under pressure.</span>
+                    <span className="landingHypHighlight"><span className="landingHypNum">H2:</span></span>
+                    {hypWords(' Inverse reasoning architectures can hold structural separation under pressure.')}
                   </li>
                   <li>
-                    <span className="landingHypHighlight"><span className="landingHypNum">H3:</span></span>{' '}
-                    <span className="landingHypSentence">Genuine tension produces better decisions than consensus or single-perspective advice.</span>
+                    <span className="landingHypHighlight"><span className="landingHypNum">H3:</span></span>
+                    {hypWords(' Genuine tension produces better decisions than consensus or single-perspective advice.')}
                   </li>
                 </ul>
               </div>
