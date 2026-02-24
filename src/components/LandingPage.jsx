@@ -111,13 +111,16 @@ export default function LandingPage({ onEnter }) {
                 </p>
                 <ul className="landingHypotheses" style={{ marginTop: 'var(--space-4)' }}>
                   <li>
-                    <span className="landingHypNum">Hypothesis 01:</span> Complete worldviews can be created for AI
+                    <span className="landingHypHighlight"><span className="landingHypNum">Hypothesis 01:</span></span>{' '}
+                    <span className="landingHypHighlight">Complete worldviews can be created for AI</span>
                   </li>
                   <li>
-                    <span className="landingHypNum">Hypothesis 02:</span> Worldviews can be used to build unique LLM personas
+                    <span className="landingHypHighlight"><span className="landingHypNum">Hypothesis 02:</span></span>{' '}
+                    <span className="landingHypHighlight">Worldviews can be used to build unique LLM personas</span>
                   </li>
                   <li>
-                    <span className="landingHypNum">Hypothesis 03:</span> Opposing personas can organically debate each other
+                    <span className="landingHypHighlight"><span className="landingHypNum">Hypothesis 03:</span></span>{' '}
+                    <span className="landingHypHighlight">Opposing personas can organically debate each other</span>
                   </li>
                 </ul>
               </div>
