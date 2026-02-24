@@ -1,0 +1,18 @@
+---
+description: Landing page layout — CTA locked to image bottom
+globs: src/components/LandingPage.jsx,src/index.css
+alwaysApply: false
+---
+
+# Landing Page Layout
+
+## Button locked to image bottom
+
+**The bottom of the "Enter Divergent" button must stay locked to the bottom of the hero image.** This is a fixed requirement for the landing view.
+
+- Do not let extra or longer copy push the button down.
+- The content column height is set in JS to match the image (from the image frame bottom, minus the column’s top padding). Keep that logic.
+- Use `justify-content: space-between` and CTA `margin-top: auto` so the button stays at the bottom of the column.
+- If text grows, keep the button fixed: use a scrollable or constrained text block (e.g. `min-height: 0` and `overflow-y: auto` on the text container) so the button position does not change.
+
+When changing landing copy, layout, or styles, preserve this behavior unless the user explicitly asks to change it.

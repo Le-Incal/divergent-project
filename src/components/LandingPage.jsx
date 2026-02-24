@@ -53,6 +53,8 @@ export default function LandingPage({ onEnter }) {
 
       const imageTop = frameRect.top - heroRect.top
       const imageBottom = frameRect.bottom - heroRect.top
+      const paddingTopPx = parseFloat(getComputedStyle(contentCol).paddingTop) || 0
+      const contentHeightPx = Math.max(0, imageBottom - paddingTopPx)
       const fontSize = parseFloat(getComputedStyle(titleText).fontSize || '0')
       const capOffset = fontSize * 0.08
       const basePx = imageTop - capOffset
@@ -60,7 +62,7 @@ export default function LandingPage({ onEnter }) {
       const offsetValue = root ? getComputedStyle(root).getPropertyValue('--landing-title-offset').trim() || '0.5in' : '0.5in'
       titleLayer.style.setProperty('--landing-title-base', `${basePx}px`)
       titleLayer.style.setProperty('--landing-title-offset', offsetValue)
-      contentCol.style.height = `${imageBottom}px`
+      contentCol.style.height = `${contentHeightPx}px`
     }
 
     const schedule = () => {
@@ -121,7 +123,7 @@ export default function LandingPage({ onEnter }) {
                 <p className="landingBody">
                   Most AI persona work engineers voice. Vocabulary, tone, opinion sets. Divergent asks a deeper question: can AI reason from fundamentally incompatible foundations, and is the tension between those foundations more useful to a human decision-maker than any single perspective?
                 </p>
-                <p className="landingBody">
+                <p className="landingBody landingBodySecond">
                   Dual-mode AI externalizing internal dialogue. Two contrasting voices side-by-side, in debate, revealing where your paths diverge.
                 </p>
                 <ul className="landingHypotheses" style={{ marginTop: 'var(--space-4)' }}>

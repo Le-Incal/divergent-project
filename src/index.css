@@ -287,7 +287,7 @@ a:hover { color: var(--ink); text-decoration-color: var(--link-underline-hover);
   padding: var(--space-9);
   overflow-x: hidden;
   --landing-title-offset: 0.5in;
-  --landing-content-base-pad: calc(14rem + 2in);
+  --landing-content-base-pad: calc(14rem + 1.25in);
 }
 .landingContainer {
   max-width: var(--max-width);
@@ -391,6 +391,8 @@ a:hover { color: var(--ink); text-decoration-color: var(--link-underline-hover);
   flex-direction: column;
   gap: var(--space-3);
   padding-top: 0;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .landingBlock {
@@ -418,6 +420,7 @@ a:hover { color: var(--ink); text-decoration-color: var(--link-underline-hover);
   color: var(--ink-secondary);
   line-height: 1.7;
 }
+.landingBodySecond { margin-top: var(--space-4); }
 .landingBodyNotice { color: var(--ink-secondary); }
 
 .landingHypotheses {
