@@ -30,6 +30,7 @@ export default function LandingPage({ onEnter }) {
     const align = () => {
       if (isMobile()) {
         titleLayer.style.removeProperty('--landing-title-base')
+        titleLayer.style.removeProperty('--landing-title-offset')
         return
       }
 
@@ -40,7 +41,10 @@ export default function LandingPage({ onEnter }) {
       const fontSize = parseFloat(getComputedStyle(titleText).fontSize || '0')
       const capOffset = fontSize * 0.08
       const basePx = imageTop - capOffset
+      const root = hero.closest('.landingPage')
+      const offsetValue = root ? getComputedStyle(root).getPropertyValue('--landing-title-offset').trim() || '0.5in' : '0.5in'
       titleLayer.style.setProperty('--landing-title-base', `${basePx}px`)
+      titleLayer.style.setProperty('--landing-title-offset', offsetValue)
     }
 
     const schedule = () => {
