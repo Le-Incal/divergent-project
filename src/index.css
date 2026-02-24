@@ -304,6 +304,7 @@ a:hover { color: var(--ink); text-decoration-color: var(--link-underline-hover);
   position: absolute;
   left: 0;
   width: 100%;
+  top: calc(var(--landing-title-base, 0) + var(--landing-title-offset));
   z-index: 4;
   pointer-events: none;
   opacity: 0;

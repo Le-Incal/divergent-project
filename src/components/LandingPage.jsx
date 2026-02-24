@@ -29,7 +29,7 @@ export default function LandingPage({ onEnter }) {
     const isMobile = () => window.matchMedia?.('(max-width: 960px)')?.matches ?? false
     const align = () => {
       if (isMobile()) {
-        titleLayer.style.top = ''
+        titleLayer.style.removeProperty('--landing-title-base')
         return
       }
 
@@ -39,12 +39,8 @@ export default function LandingPage({ onEnter }) {
       const imageTop = frameRect.top - heroRect.top
       const fontSize = parseFloat(getComputedStyle(titleText).fontSize || '0')
       const capOffset = fontSize * 0.08
-      const root = hero.closest('.landingPage') || hero
-      const raw = (getComputedStyle(root).getPropertyValue('--landing-title-offset') || '0').trim()
-      const num = parseFloat(raw)
-      const isInches = /in\s*$/i.test(raw)
-      const titleOffsetPx = isInches ? num * 96 : num
-      titleLayer.style.top = `${imageTop - capOffset + titleOffsetPx}px`
+      const basePx = imageTop - capOffset
+      titleLayer.style.setProperty('--landing-title-base', `${basePx}px`)
     }
 
     const schedule = () => {
