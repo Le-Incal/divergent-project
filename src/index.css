@@ -330,7 +330,7 @@ a:hover { color: var(--ink); text-decoration-color: var(--link-underline-hover);
   border-radius: var(--radius-md);
   overflow: hidden;
   position: relative;
-  max-width: 660px;
+  max-width: 715px;
 }
 .landingImageFrame img {
   width: 100%;
@@ -363,7 +363,7 @@ a:hover { color: var(--ink); text-decoration-color: var(--link-underline-hover);
   color: var(--ink-ghost);
   line-height: 1.6;
   margin-top: var(--space-4);
-  max-width: 660px;
+  max-width: 715px;
   opacity: 0;
   animation: fadeUp 0.8s var(--ease-out) 0.5s forwards;
 }
