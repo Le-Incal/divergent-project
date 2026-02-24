@@ -119,7 +119,10 @@ export default function LandingPage({ onEnter }) {
             <div className="landingBlocks">
               <div className="landingBlock">
                 <p className="landingBody">
-                  Dual-mode AI externalizing internal dialogue. Two contrasting voices<br />side-by-side, in debate will reveal where your paths split.
+                  Most AI persona work engineers voice. Vocabulary, tone, opinion sets. Divergent asks a deeper question: can AI reason from fundamentally incompatible foundations, and is the tension between those foundations more useful to a human decision-maker than any single perspective?
+                </p>
+                <p className="landingBody">
+                  Dual-mode AI externalizing internal dialogue. Two contrasting voices side-by-side, in debate, revealing where your paths diverge.
                 </p>
                 <ul className="landingHypotheses" style={{ marginTop: 'var(--space-4)' }}>
                   <li>
