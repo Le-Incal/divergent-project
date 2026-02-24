@@ -41,16 +41,18 @@ export default function LandingPage({ onEnter }) {
       const imageTop = frameRect.top - heroRect.top
       const fontSize = parseFloat(getComputedStyle(titleText).fontSize || '0')
       const capOffset = fontSize * 0.08
-      titleLayer.style.top = `${imageTop - capOffset}px`
+      const titleOffset = parseFloat(getComputedStyle(hero).getPropertyValue('--landing-title-offset') || '0')
+      titleLayer.style.top = `${imageTop - capOffset + titleOffset}px`
 
       if (ctaArea) {
         // Reset to base padding to get a clean measurement.
-        contentCol.style.setProperty('--hero-content-pad-top', '14rem')
+        const basePad = getComputedStyle(hero).getPropertyValue('--landing-content-base-pad')?.trim() || '14rem'
+        contentCol.style.setProperty('--hero-content-pad-top', basePad)
         const frameRect2 = imageFrame.getBoundingClientRect()
         const ctaRect = ctaArea.getBoundingClientRect()
         const diff = frameRect2.bottom - ctaRect.bottom
-        const basePad = parseFloat(getComputedStyle(contentCol).paddingTop || '0')
-        contentCol.style.setProperty('--hero-content-pad-top', `${Math.max(basePad + diff, basePad)}px`)
+        const basePadPx = parseFloat(getComputedStyle(contentCol).paddingTop || '0')
+        contentCol.style.setProperty('--hero-content-pad-top', `${Math.max(basePadPx + diff, basePadPx)}px`)
       }
     }
 
