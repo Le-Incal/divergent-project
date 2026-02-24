@@ -1,18 +1,30 @@
 ---
-description: Landing page layout — CTA locked to image bottom
-globs: src/components/LandingPage.jsx,src/index.css
+description: Landing page coupling/collision behavior
+globs: "{src/components/LandingPage.jsx,src/index.css}"
 alwaysApply: false
 ---
 
 # Landing Page Layout
 
-## Button locked to image bottom
+## Required behavior (do not regress)
 
-**The bottom of the "Enter Divergent" button must stay locked to the bottom of the hero image.** This is a fixed requirement for the landing view.
+For landing updates in `src/components/LandingPage.jsx` and `src/index.css`, preserve all of these:
 
-- Do not let extra or longer copy push the button down.
-- The content column height is set in JS to match the image (from the image frame bottom, minus the column’s top padding). Keep that logic.
-- Use `justify-content: space-between` and CTA `margin-top: auto` so the button stays at the bottom of the column.
-- If text grows, keep the button fixed: use a scrollable or constrained text block (e.g. `min-height: 0` and `overflow-y: auto` on the text container) so the button position does not change.
+1) **CTA anchor is deterministic**
+- Bottom of `Enter Divergent` stays aligned to the hero image bottom on desktop/tablet.
+- JS alignment keeps right column height tied to image frame bottom.
 
-When changing landing copy, layout, or styles, preserve this behavior unless the user explicitly asks to change it.
+2) **Text body and CTA move as one bundle**
+- Text body block is directly above CTA with a small fixed gap.
+- Do not let the text body become an independent scrolling region that drifts away from CTA.
+- The text body should respond to column width and right-side padding changes.
+
+3) **Title collision behavior**
+- Title position is independent from the body/CTA bundle.
+- When body text rises, it must push title upward.
+- Collision gap is fixed at **48px** minimum between title bottom and text-body top.
+
+4) **Notice paragraph wrapping**
+- Keep the notice paragraph width-responsive (no forced desktop no-wrap, no hard line-break locking).
+
+Only change these rules if the user explicitly asks to alter the landing behavior.

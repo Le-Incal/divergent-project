@@ -1,15 +1,7 @@
 import { useLayoutEffect, useRef, useState } from 'react'
 
-function hypPhrases(text) {
-  const trimmed = text.trim()
-  if (!trimmed) return trimmed
-  const segments = trimmed.split(/(?<=[.,;:!?])\s+/)
-  return segments.map((segment, i) => (
-    <span key={i}>
-      {i > 0 && ' '}
-      <span className="landingHypSentence">{segment}</span>
-    </span>
-  ))
+function hypSentence(text) {
+  return <span className="landingHypSentence">{text}</span>
 }
 
 export default function LandingPage({ onEnter }) {
@@ -21,6 +13,8 @@ export default function LandingPage({ onEnter }) {
   const imageRef = useRef(null)
   const ctaAreaRef = useRef(null)
   const contentColRef = useRef(null)
+  const contentStackRef = useRef(null)
+  const blocksRef = useRef(null)
 
   const handleEnter = () => {
     if (isEntering) return
@@ -35,8 +29,11 @@ export default function LandingPage({ onEnter }) {
     const titleText = titleTextRef.current
     const imageFrame = imageFrameRef.current
     const contentCol = contentColRef.current
+    const contentStack = contentStackRef.current
+    const blocks = blocksRef.current
+    const ctaArea = ctaAreaRef.current
 
-    if (!hero || !titleLayer || !titleText || !imageFrame || !contentCol) return
+    if (!hero || !titleLayer || !titleText || !imageFrame || !contentCol || !contentStack || !blocks || !ctaArea) return
 
     let raf = 0
     const isMobile = () => window.matchMedia?.('(max-width: 960px)')?.matches ?? false
@@ -44,6 +41,7 @@ export default function LandingPage({ onEnter }) {
       if (isMobile()) {
         titleLayer.style.removeProperty('--landing-title-base')
         titleLayer.style.removeProperty('--landing-title-offset')
+        contentCol.style.height = ''
         return
       }
 
@@ -51,13 +49,27 @@ export default function LandingPage({ onEnter }) {
       const frameRect = imageFrame.getBoundingClientRect()
 
       const imageTop = frameRect.top - heroRect.top
+      const imageBottom = frameRect.bottom - heroRect.top
       const fontSize = parseFloat(getComputedStyle(titleText).fontSize || '0')
       const capOffset = fontSize * 0.08
       const basePx = imageTop - capOffset
       const root = hero.closest('.landingPage')
       const offsetValue = root ? getComputedStyle(root).getPropertyValue('--landing-title-offset').trim() || '0.5in' : '0.5in'
-      titleLayer.style.setProperty('--landing-title-base', `${basePx}px`)
       titleLayer.style.setProperty('--landing-title-offset', offsetValue)
+      contentCol.style.height = `${imageBottom}px`
+
+      // First place the title from the image anchor.
+      titleLayer.style.setProperty('--landing-title-base', `${basePx}px`)
+
+      // If content stack rises, nudge the title up to preserve a small gap.
+      const titleRect = titleText.getBoundingClientRect()
+      const blocksRect = blocks.getBoundingClientRect()
+      // Keep extra breathing room so the "G" in Divergent never sits on the body copy.
+      const minGap = 48
+      const overlap = titleRect.bottom + minGap - blocksRect.top
+      if (overlap > 0) {
+        titleLayer.style.setProperty('--landing-title-base', `${basePx - overlap}px`)
+      }
     }
 
     const schedule = () => {
@@ -70,6 +82,9 @@ export default function LandingPage({ onEnter }) {
     ro.observe(imageFrame)
     ro.observe(titleText)
     ro.observe(contentCol)
+    ro.observe(contentStack)
+    ro.observe(blocks)
+    ro.observe(ctaArea)
 
     window.addEventListener('resize', schedule)
     const img = imageRef.current
@@ -113,45 +128,48 @@ export default function LandingPage({ onEnter }) {
           </div>
 
           <div className="landingContentCol" ref={contentColRef}>
-            <div className="landingBlocks">
-              <div className="landingBlock">
-                <p className="landingBody">
-                  Most AI persona work engineers voice. Vocabulary, tone, opinion sets. Divergent asks a deeper question: can AI reason from fundamentally incompatible foundations, and is the tension between those foundations more useful to a human decision-maker than any single perspective?
-                </p>
-                <p className="landingBody landingBodySecond">
-                  Dual-mode AI externalizing internal dialogue. Two contrasting voices side-by-side, in debate, revealing where your paths diverge.
-                </p>
-                <ul className="landingHypotheses" style={{ marginTop: 'var(--space-4)' }}>
-                  <li>
-                    <span className="landingHypHighlight"><span className="landingHypNum">H1:</span></span>
-                    {' '}
-                    {hypPhrases('AI voices can be built from epistemological operating systems, not just personality traits.')}
-                  </li>
-                  <li>
-                    <span className="landingHypHighlight"><span className="landingHypNum">H2:</span></span>
-                    {' '}
-                    {hypPhrases('Inverse reasoning architectures can hold structural separation under pressure.')}
-                  </li>
-                  <li>
-                    <span className="landingHypHighlight"><span className="landingHypNum">H3:</span></span>
-                    {' '}
-                    {hypPhrases('Genuine tension produces better decisions than consensus or single-perspective advice.')}
-                  </li>
-                </ul>
+            <div className="landingContentStack" ref={contentStackRef}>
+              <div className="landingBlocks" ref={blocksRef}>
+                <div className="landingBlock">
+                  <p className="landingBody">
+                    Most AI persona work engineers voice. Vocabulary, tone, opinion sets. Divergent asks a deeper question: can AI reason from fundamentally incompatible foundations, and is the tension between those foundations more useful to a human decision-maker than any single perspective?
+                  </p>
+                  <p className="landingBody landingBodySecond">
+                    Dual-mode AI externalizing internal dialogue. Two contrasting voices side-by-side, in debate, revealing where your paths diverge.
+                  </p>
+                  <ul className="landingHypotheses" style={{ marginTop: 'var(--space-4)' }}>
+                    <li>
+                      <span className="landingHypHighlight"><span className="landingHypNum">H1:</span></span>
+                      {' '}
+                      {hypSentence('AI voices can be built from epistemological operating systems, not just personality traits.')}
+                    </li>
+                    <li>
+                      <span className="landingHypHighlight"><span className="landingHypNum">H2:</span></span>
+                      {' '}
+                      {hypSentence('Inverse reasoning architectures can hold structural separation under pressure.')}
+                    </li>
+                    <li>
+                      <span className="landingHypHighlight"><span className="landingHypNum">H3:</span></span>
+                      {' '}
+                      {hypSentence('Genuine tension produces better decisions than consensus or single-perspective advice.')}
+                    </li>
+                  </ul>
+                </div>
+
+                <div className="landingBlock">
+                  <p className="landingBody landingBodyNotice">
+                    Divergent is not professional advice and does not replace therapy, legal, financial, or medical counsel. In
+                    Sandpit mode content becomes unfiltered and adversarial by design.
+                  </p>
+                </div>
               </div>
 
-              <div className="landingBlock">
-                <p className="landingBody landingBodyNotice">
-                  Divergent is not professional advice and does not replace therapy, legal,<br />financial, or medical counsel. In Sandpit mode content becomes unfiltered<br />and adversarial by design.
-                </p>
+              <div className="landingCta" ref={ctaAreaRef}>
+                <p className="landingCtaTagline">See where your paths diverge</p>
+                <button type="button" className="btn btn-primary btn-arrow" onClick={handleEnter} disabled={isEntering}>
+                  Enter Divergent
+                </button>
               </div>
-            </div>
-
-            <div className="landingCta" ref={ctaAreaRef}>
-              <p className="landingCtaTagline">See where your paths diverge</p>
-              <button type="button" className="btn btn-primary btn-arrow" onClick={handleEnter} disabled={isEntering}>
-                Enter Divergent
-              </button>
             </div>
           </div>
         </div>
