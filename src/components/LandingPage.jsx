@@ -44,7 +44,6 @@ export default function LandingPage({ onEnter }) {
       if (isMobile()) {
         titleLayer.style.removeProperty('--landing-title-base')
         titleLayer.style.removeProperty('--landing-title-offset')
-        contentCol.style.height = ''
         return
       }
 
@@ -52,9 +51,6 @@ export default function LandingPage({ onEnter }) {
       const frameRect = imageFrame.getBoundingClientRect()
 
       const imageTop = frameRect.top - heroRect.top
-      const imageBottom = frameRect.bottom - heroRect.top
-      const paddingTopPx = parseFloat(getComputedStyle(contentCol).paddingTop) || 0
-      const contentHeightPx = Math.max(0, imageBottom - paddingTopPx)
       const fontSize = parseFloat(getComputedStyle(titleText).fontSize || '0')
       const capOffset = fontSize * 0.08
       const basePx = imageTop - capOffset
@@ -62,7 +58,6 @@ export default function LandingPage({ onEnter }) {
       const offsetValue = root ? getComputedStyle(root).getPropertyValue('--landing-title-offset').trim() || '0.5in' : '0.5in'
       titleLayer.style.setProperty('--landing-title-base', `${basePx}px`)
       titleLayer.style.setProperty('--landing-title-offset', offsetValue)
-      contentCol.style.height = `${contentHeightPx}px`
     }
 
     const schedule = () => {
