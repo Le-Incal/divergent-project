@@ -106,7 +106,7 @@ export default function LandingPage({ onEnter }) {
                 <p className="landingBody">
                   Dual-mode AI externalizing internal dialogue. Two contrasting voices<br />side-by-side, in debate will reveal where your paths split.
                 </p>
-                <ul className="landingHypotheses" style={{ marginTop: 'var(--space-6)' }}>
+                <ul className="landingHypotheses" style={{ marginTop: 'var(--space-4)' }}>
                   <li>
                     <span className="landingHypNum">Hypothesis 01:</span> Complete worldviews can be created for AI
                   </li>
