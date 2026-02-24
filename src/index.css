@@ -369,12 +369,11 @@ a:hover { color: var(--ink); text-decoration-color: var(--link-underline-hover);
 }
 
 .landingContentCol {
-  --hero-content-pad-top: var(--landing-content-base-pad);
   padding-left: 160px;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  padding-top: var(--hero-content-pad-top);
+  padding-top: var(--landing-content-base-pad);
 }
 
 .landingBlocks {
@@ -441,6 +440,7 @@ a:hover { color: var(--ink); text-decoration-color: var(--link-underline-hover);
   margin-top: var(--space-8);
   opacity: 0;
   animation: fadeUp 0.8s var(--ease-out) 1s forwards;
+  transform: translateY(var(--landing-cta-offset, 0px));
 }
 .landingCtaTagline {
   font-family: var(--font-primary);

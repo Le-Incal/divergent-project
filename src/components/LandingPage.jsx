@@ -32,7 +32,7 @@ export default function LandingPage({ onEnter }) {
     const align = () => {
       if (isMobile()) {
         titleLayer.style.top = ''
-        contentCol.style.removeProperty('--hero-content-pad-top')
+        ctaArea?.style.removeProperty('--landing-cta-offset')
         return
       }
 
@@ -46,16 +46,13 @@ export default function LandingPage({ onEnter }) {
       titleLayer.style.top = `${imageTop - capOffset + titleOffset}px`
 
       if (ctaArea) {
-        // Reset to base padding to get a clean measurement.
-        const basePad = getComputedStyle(hero).getPropertyValue('--landing-content-base-pad')?.trim() || '14rem'
-        contentCol.style.setProperty('--hero-content-pad-top', basePad)
         const frameRect2 = imageFrame.getBoundingClientRect()
         const targetEl = ctaArea.querySelector('button, a') || ctaArea
         const targetRect = targetEl.getBoundingClientRect()
         const diff = frameRect2.bottom - targetRect.bottom
-        const basePadPx = parseFloat(getComputedStyle(contentCol).paddingTop || '0')
-        const lockedPadPx = Math.max(0, basePadPx + diff)
-        contentCol.style.setProperty('--hero-content-pad-top', `${lockedPadPx}px`)
+        // Lock the CTA/button bottom to the image bottom by visually offsetting the CTA,
+        // without changing the body block positioning.
+        ctaArea.style.setProperty('--landing-cta-offset', `${diff}px`)
       }
     }
 
@@ -68,7 +65,10 @@ export default function LandingPage({ onEnter }) {
     ro.observe(hero)
     ro.observe(imageFrame)
     if (ctaArea) ro.observe(ctaArea)
-    ro.observe(contentCol)
+    if (ctaArea) {
+      const btn = ctaArea.querySelector('button, a')
+      if (btn) ro.observe(btn)
+    }
     ro.observe(titleText)
 
     window.addEventListener('resize', schedule)
