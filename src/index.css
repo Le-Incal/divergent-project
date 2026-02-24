@@ -379,6 +379,7 @@ a:hover { color: var(--ink); text-decoration-color: var(--link-underline-hover);
   display: flex;
   flex-direction: column;
   gap: var(--space-5);
+  padding-top: var(--space-3);
 }
 
 .landingBlock {
@@ -402,7 +403,7 @@ a:hover { color: var(--ink); text-decoration-color: var(--link-underline-hover);
 .landingBody {
   font-family: var(--font-primary);
   font-weight: 400;
-  font-size: var(--text-sm);
+  font-size: calc(var(--text-sm) - 1px);
   color: var(--ink-secondary);
   line-height: 1.7;
   max-width: 380px;
@@ -420,14 +421,14 @@ a:hover { color: var(--ink); text-decoration-color: var(--link-underline-hover);
 .landingHypotheses li {
   font-family: var(--font-primary);
   font-weight: 400;
-  font-size: var(--text-sm);
+  font-size: calc(var(--text-sm) - 1px);
   color: var(--ink-secondary);
   line-height: 1.7;
 }
 .landingHypNum {
   font-family: var(--font-mono);
   font-weight: 400;
-  font-size: var(--text-sm);
+  font-size: calc(var(--text-sm) - 1px);
   letter-spacing: 0.05em;
   color: var(--ink-tertiary);
   margin-right: var(--space-2);
