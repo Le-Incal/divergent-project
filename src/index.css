@@ -371,7 +371,7 @@ a:hover { color: var(--ink); text-decoration-color: var(--link-underline-hover);
   font-size: var(--text-xs);
   color: var(--ink-ghost);
   line-height: 1.6;
-  margin-top: var(--space-4);
+  margin-top: var(--space-6);
   max-width: 1030px;
   opacity: 0;
   animation: fadeUp 0.8s var(--ease-out) 0.5s forwards;
@@ -411,7 +411,9 @@ a:hover { color: var(--ink); text-decoration-color: var(--link-underline-hover);
   margin-bottom: var(--space-2);
 }
 
-.landingBody {
+/* Shared text body framework: one definition for all body copy */
+.landingBody,
+.landingHypotheses li {
   font-family: var(--font-primary);
   font-weight: 400;
   font-size: calc(var(--text-sm) - 1px);
@@ -428,14 +430,8 @@ a:hover { color: var(--ink); text-decoration-color: var(--link-underline-hover);
   margin: 0;
   padding: 0;
 }
-.landingHypotheses li {
-  font-family: var(--font-primary);
-  font-weight: 400;
-  font-size: calc(var(--text-sm) - 1px);
-  color: var(--ink-secondary);
-  line-height: 1.7;
-  text-wrap: balance;
-}
+.landingHypotheses li { text-wrap: balance; }
+
 .landingHypHighlight {
   background: #d4ed9e;
   box-decoration-break: clone;
