@@ -285,8 +285,8 @@ a:hover { color: var(--ink); text-decoration-color: var(--link-underline-hover);
   align-items: center;
   justify-content: center;
   padding: var(--space-9);
-  --landing-title-offset: 0.5in;
-  --landing-content-base-pad: calc(14rem + 0.5in);
+  --landing-title-offset: 1in;
+  --landing-content-base-pad: calc(14rem + 1in);
 }
 .landingContainer {
   max-width: var(--max-width);
