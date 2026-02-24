@@ -111,16 +111,16 @@ export default function LandingPage({ onEnter }) {
                 </p>
                 <ul className="landingHypotheses" style={{ marginTop: 'var(--space-4)' }}>
                   <li>
-                    <div className="landingHypLabel"><span className="landingHypHighlight"><span className="landingHypNum">Hypothesis 01:</span></span></div>
-                    <div className="landingHypBody">AI voices can be built from epistemological operating<br />systems, not just personality traits.</div>
+                    <div className="landingHypLabel"><span className="landingHypHighlight"><span className="landingHypNum">H1:</span></span></div>
+                    <div className="landingHypBody">AI voices can be built from epistemological operating systems, not just personality traits.</div>
                   </li>
                   <li>
-                    <div className="landingHypLabel"><span className="landingHypHighlight"><span className="landingHypNum">Hypothesis 02:</span></span></div>
-                    <div className="landingHypBody">Inverse reasoning architectures can hold structural<br />separation under pressure.</div>
+                    <div className="landingHypLabel"><span className="landingHypHighlight"><span className="landingHypNum">H2:</span></span></div>
+                    <div className="landingHypBody">Inverse reasoning architectures can hold structural separation under pressure.</div>
                   </li>
                   <li>
-                    <div className="landingHypLabel"><span className="landingHypHighlight"><span className="landingHypNum">Hypothesis 03:</span></span></div>
-                    <div className="landingHypBody">Genuine tension produces better decisions than<br />consensus or single-perspective advice.</div>
+                    <div className="landingHypLabel"><span className="landingHypHighlight"><span className="landingHypNum">H3:</span></span></div>
+                    <div className="landingHypBody">Genuine tension produces better decisions than consensus or single-perspective advice.</div>
                   </li>
                 </ul>
               </div>

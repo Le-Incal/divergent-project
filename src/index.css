@@ -441,6 +441,7 @@ a:hover { color: var(--ink); text-decoration-color: var(--link-underline-hover);
 }
 .landingHypBody {
   margin: 0;
+  white-space: nowrap;
 }
 .landingHypHighlight {
   background: #d4ed9e;
