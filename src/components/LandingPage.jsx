@@ -105,8 +105,7 @@ export default function LandingPage({ onEnter }) {
               <div className="landingBlock">
                 <div className="landingLabel">What This Is</div>
                 <p className="landingBody">
-                  Dual-mode AI externalizing internal dialogue. Two contrasting voices side-by-side, in debate will reveal
-                  where your paths split.
+                  Dual-mode AI externalizing internal dialogue. Two contrasting voices<br />side-by-side, in debate will reveal where your paths split.
                 </p>
                 <ul className="landingHypotheses" style={{ marginTop: 'var(--space-3)' }}>
                   <li>
@@ -124,8 +123,7 @@ export default function LandingPage({ onEnter }) {
               <div className="landingBlock">
                 <div className="landingLabel">Notice</div>
                 <p className="landingBody landingBodyNotice">
-                  Divergent is not professional advice and does not replace therapy, legal, financial, or medical counsel. In
-                  Sandpit mode content becomes unfiltered and adversarial by design.
+                  Divergent is not professional advice and does not replace therapy, legal,<br />financial, or medical counsel. In Sandpit mode content becomes unfiltered<br />and adversarial by design.
                 </p>
               </div>
             </div>
