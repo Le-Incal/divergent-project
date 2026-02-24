@@ -1,9 +1,15 @@
 import { useLayoutEffect, useRef, useState } from 'react'
 
-function hypWords(text) {
-  return text.split(/(\s+)/).map((part, i) =>
-    part.trim().length === 0 ? part : <span key={i} className="landingHypSentence">{part}</span>
-  )
+function hypPhrases(text) {
+  const trimmed = text.trim()
+  if (!trimmed) return trimmed
+  const segments = trimmed.split(/(?<=[.,;:!?])\s+/)
+  return segments.map((segment, i) => (
+    <span key={i}>
+      {i > 0 && ' '}
+      <span className="landingHypSentence">{segment}</span>
+    </span>
+  ))
 }
 
 export default function LandingPage({ onEnter }) {
@@ -118,15 +124,18 @@ export default function LandingPage({ onEnter }) {
                 <ul className="landingHypotheses" style={{ marginTop: 'var(--space-4)' }}>
                   <li>
                     <span className="landingHypHighlight"><span className="landingHypNum">H1:</span></span>
-                    {hypWords(' AI voices can be built from epistemological operating systems, not just personality traits.')}
+                    {' '}
+                    {hypPhrases('AI voices can be built from epistemological operating systems, not just personality traits.')}
                   </li>
                   <li>
                     <span className="landingHypHighlight"><span className="landingHypNum">H2:</span></span>
-                    {hypWords(' Inverse reasoning architectures can hold structural separation under pressure.')}
+                    {' '}
+                    {hypPhrases('Inverse reasoning architectures can hold structural separation under pressure.')}
                   </li>
                   <li>
                     <span className="landingHypHighlight"><span className="landingHypNum">H3:</span></span>
-                    {hypWords(' Genuine tension produces better decisions than consensus or single-perspective advice.')}
+                    {' '}
+                    {hypPhrases('Genuine tension produces better decisions than consensus or single-perspective advice.')}
                   </li>
                 </ul>
               </div>
