@@ -1,6 +1,24 @@
-import { createContext, useContext, useReducer } from 'react'
+import { createContext, useContext, useEffect, useReducer } from 'react'
 
 const AppContext = createContext()
+
+const HISTORY_STORAGE_KEY = 'divergent-chat-histories-v1'
+
+function safeJsonParse(value, fallback) {
+  try {
+    return JSON.parse(value)
+  } catch {
+    return fallback
+  }
+}
+
+function makeId() {
+  try {
+    return crypto.randomUUID()
+  } catch {
+    return `${Date.now()}-${Math.random().toString(16).slice(2)}`
+  }
+}
 
 // Available AI providers (Default and Sandpit).
 export const PROVIDERS = {
@@ -224,12 +242,23 @@ const initialState = {
   isDebating: false,
   selectedBranch: null, // 'ethos' | 'ego' | null; when set, ST-1/ST-2 appended for that voice
   resolutionText: null, // O-2 neutral summary when exchange ends
+  chatHistories: [],
+  activeChatId: null,
 }
 
 const DEFAULT_PROVIDER_FALLBACK = DEFAULT_MODE_PROVIDERS[0] ?? 'claude'
 const coerceDefaultProvider = (id) => (DEFAULT_MODE_PROVIDERS.includes(id) ? id : DEFAULT_PROVIDER_FALLBACK)
 
 const reducer = (state, action) => {
+  const applyActiveChatPatch = (nextState, patch) => {
+    if (!nextState.activeChatId) return nextState
+    const idx = nextState.chatHistories.findIndex((c) => c.id === nextState.activeChatId)
+    if (idx === -1) return nextState
+    const next = nextState.chatHistories.slice()
+    next[idx] = { ...next[idx], ...patch, updatedAt: Date.now() }
+    return { ...nextState, chatHistories: next }
+  }
+
   switch (action.type) {
     case 'TOGGLE_SIDEBAR':
       return { ...state, sidebarOpen: !state.sidebarOpen }
@@ -257,34 +286,102 @@ const reducer = (state, action) => {
     case 'SET_DEBATE_OVERLAP':
       return { ...state, debateOverlap: Math.min(100, Math.max(0, Number(action.payload))) }
     case 'SET_USER_INPUT':
-      return { ...state, userInput: action.payload }
+      return applyActiveChatPatch(
+        { ...state, userInput: action.payload },
+        { userInput: action.payload, title: String(action.payload || '').slice(0, 64) },
+      )
     case 'START_LOADING':
       return { ...state, isLoading: true }
     case 'SET_VOICE_A_RESPONSE':
-      return { ...state, voiceAResponse: action.payload }
+      return applyActiveChatPatch({ ...state, voiceAResponse: action.payload }, { voiceAResponse: action.payload })
     case 'SET_VOICE_B_RESPONSE':
-      return { ...state, voiceBResponse: action.payload }
+      return applyActiveChatPatch({ ...state, voiceBResponse: action.payload }, { voiceBResponse: action.payload })
     case 'STOP_LOADING':
       return { ...state, isLoading: false }
     case 'ADD_DEBATE_MESSAGE':
-      return { ...state, debateMessages: [...state.debateMessages, action.payload] }
+      return applyActiveChatPatch(
+        { ...state, debateMessages: [...state.debateMessages, action.payload] },
+        { debateMessages: [...state.debateMessages, action.payload] },
+      )
+    case 'UPDATE_DEBATE_MESSAGE_TEXT': {
+      const { index, text } = action.payload || {}
+      if (typeof index !== 'number' || index < 0 || index >= state.debateMessages.length) return state
+      const next = state.debateMessages.slice()
+      next[index] = { ...next[index], text: text ?? '' }
+      return applyActiveChatPatch({ ...state, debateMessages: next }, { debateMessages: next })
+    }
     case 'CLEAR_DEBATE_MESSAGES':
-      return { ...state, debateMessages: [] }
+      return applyActiveChatPatch({ ...state, debateMessages: [] }, { debateMessages: [] })
     case 'SET_DEBATING':
       return { ...state, isDebating: action.payload }
     case 'CLEAR_RESPONSES':
-      return { ...state, voiceAResponse: null, voiceBResponse: null, debateMessages: [], userInput: '', selectedBranch: null, resolutionText: null }
+      return { ...state, voiceAResponse: null, voiceBResponse: null, debateMessages: [], userInput: '', selectedBranch: null, resolutionText: null, activeChatId: null }
     case 'SET_SELECTED_BRANCH':
       return { ...state, selectedBranch: action.payload }
     case 'SET_RESOLUTION':
-      return { ...state, resolutionText: action.payload }
+      return applyActiveChatPatch({ ...state, resolutionText: action.payload }, { resolutionText: action.payload })
+    case 'START_NEW_CHAT': {
+      const payload = action.payload || {}
+      const id = makeId()
+      const now = Date.now()
+      const entry = {
+        id,
+        createdAt: now,
+        updatedAt: now,
+        title: String(payload.title || '').trim().slice(0, 64) || 'New chat',
+        mode: state.mode,
+        frameworkId: state.activeFramework,
+        userInput: payload.userInput ?? state.userInput ?? '',
+        voiceAResponse: '',
+        voiceBResponse: '',
+        debateMessages: [],
+        resolutionText: null,
+      }
+      return {
+        ...state,
+        activeChatId: id,
+        chatHistories: [entry, ...state.chatHistories].slice(0, 50),
+      }
+    }
+    case 'LOAD_CHAT': {
+      const id = action.payload
+      const chat = state.chatHistories.find((c) => c.id === id)
+      if (!chat) return state
+      return {
+        ...state,
+        activeChatId: chat.id,
+        mode: chat.mode || state.mode,
+        activeFramework: chat.frameworkId || state.activeFramework,
+        userInput: chat.userInput || '',
+        voiceAResponse: chat.voiceAResponse ?? null,
+        voiceBResponse: chat.voiceBResponse ?? null,
+        debateMessages: Array.isArray(chat.debateMessages) ? chat.debateMessages : [],
+        resolutionText: chat.resolutionText ?? null,
+      }
+    }
     default:
       return state
   }
 }
 
 export function AppProvider({ children }) {
-  const [state, dispatch] = useReducer(reducer, initialState)
+  const [state, dispatch] = useReducer(
+    reducer,
+    initialState,
+    (init) => {
+      const fromStorage = safeJsonParse(localStorage.getItem(HISTORY_STORAGE_KEY) || '[]', [])
+      if (!Array.isArray(fromStorage)) return init
+      return { ...init, chatHistories: fromStorage }
+    },
+  )
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(state.chatHistories || []))
+    } catch {
+      // ignore
+    }
+  }, [state.chatHistories])
   
   const getActiveFramework = () => {
     const fw = FRAMEWORKS[state.activeFramework]
@@ -329,6 +426,8 @@ export function AppProvider({ children }) {
     setDebateOverlap: (value) => dispatch({ type: 'SET_DEBATE_OVERLAP', payload: value }),
     setSelectedBranch: (branch) => dispatch({ type: 'SET_SELECTED_BRANCH', payload: branch }),
     setResolution: (text) => dispatch({ type: 'SET_RESOLUTION', payload: text }),
+    startNewChat: (title, userInput) => dispatch({ type: 'START_NEW_CHAT', payload: { title, userInput } }),
+    loadChat: (id) => dispatch({ type: 'LOAD_CHAT', payload: id }),
   }
   
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>

@@ -6,11 +6,48 @@ export function useChat() {
   const [isStreaming, setIsStreaming] = useState({ voiceA: false, voiceB: false })
   const [isResolving, setIsResolving] = useState(false)
 
+  const streamSseToText = async ({ endpoint, body, onTextDelta }) => {
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+
+    if (!response.ok) throw new Error('API request failed')
+    const reader = response.body.getReader()
+    const decoder = new TextDecoder()
+    let fullText = ''
+
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+
+      const chunk = decoder.decode(value)
+      const lines = chunk.split('\n')
+
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue
+        const data = line.slice(6)
+        if (data === '[DONE]') continue
+        try {
+          const parsed = JSON.parse(data)
+          if (parsed.text) {
+            fullText += parsed.text
+            onTextDelta?.(fullText)
+          }
+        } catch (e) {}
+      }
+    }
+
+    return fullText
+  }
+
   const sendMessage = useCallback(async (message) => {
     const framework = getActiveFramework()
     const providerA = getVoiceAProvider()
     const providerB = getVoiceBProvider()
     
+    dispatch({ type: 'START_NEW_CHAT', payload: { title: message, userInput: message } })
     dispatch({ type: 'START_LOADING' })
     dispatch({ type: 'SET_VOICE_A_RESPONSE', payload: '' })
     dispatch({ type: 'SET_VOICE_B_RESPONSE', payload: '' })
@@ -30,52 +67,89 @@ export function useChat() {
               voiceName: voice.name,
             }
           : { message, systemPrompt: voice.systemPrompt, voiceName: voice.name }
-        const response = await fetch(provider.endpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
+        return await streamSseToText({
+          endpoint: provider.endpoint,
+          body,
+          onTextDelta: (fullText) => dispatch({ type: setterAction, payload: fullText }),
         })
-
-        if (!response.ok) throw new Error('API request failed')
-
-        const reader = response.body.getReader()
-        const decoder = new TextDecoder()
-        let fullText = ''
-
-        while (true) {
-          const { done, value } = await reader.read()
-          if (done) break
-
-          const chunk = decoder.decode(value)
-          const lines = chunk.split('\n')
-
-          for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              const data = line.slice(6)
-              if (data === '[DONE]') continue
-
-              try {
-                const parsed = JSON.parse(data)
-                if (parsed.text) {
-                  fullText += parsed.text
-                  dispatch({ type: setterAction, payload: fullText })
-                }
-              } catch (e) {}
-            }
-          }
-        }
       } catch (error) {
         console.error(`Error streaming ${voice.name}:`, error)
         dispatch({ type: setterAction, payload: `*Error: Could not get response. Please try again.*` })
+        return ''
       } finally {
         setIsStreaming(prev => ({ ...prev, [voiceKey]: false }))
       }
     }
 
-    await Promise.all([
+    const [voiceAThesis, voiceBThesis] = await Promise.all([
       streamVoice(framework.voiceA, 'voiceA', 'SET_VOICE_A_RESPONSE', providerA),
       streamVoice(framework.voiceB, 'voiceB', 'SET_VOICE_B_RESPONSE', providerB),
     ])
+
+    // Immediately follow theses with antithesis: a short streamed debate exchange.
+    // Turn order: A responds to B, then B responds to A.
+    const debateSoFar = []
+    const streamDebateTurn = async (nextSpeakerKey) => {
+      const provider = nextSpeakerKey === 'A' ? providerA : providerB
+      const voice = nextSpeakerKey === 'A' ? framework.voiceA : framework.voiceB
+
+      const context = `
+Initial theses:
+${framework.voiceA.name}: ${voiceAThesis}
+${framework.voiceB.name}: ${voiceBThesis}
+
+Debate so far:
+${debateSoFar.map((m) => `${m.name}: ${m.text}`).join('\n')}
+`
+
+      const debateBody = isEthosEgo
+        ? {
+            message: `Debate now. Directly respond to the other voice's thesis. Be punchy and adversarial. Context:\n${context}`,
+            voice: nextSpeakerKey === 'A' ? 'ethos' : 'ego',
+            mode: state.mode,
+            appendTransition: state.selectedBranch === (nextSpeakerKey === 'A' ? 'ethos' : 'ego') ? (nextSpeakerKey === 'A' ? 'ethos' : 'ego') : null,
+            voiceName: voice.name,
+          }
+        : {
+            message: `Debate now. Directly respond to the other voice's thesis. Be punchy and adversarial. Context:\n${context}`,
+            systemPrompt: voice.systemPrompt + '\n\nKeep your response concise - 2-3 sentences max. Be punchy and provocative.',
+            voiceName: voice.name,
+          }
+
+      const nextIndex = debateSoFar.length
+      debateSoFar.push({ speaker: nextSpeakerKey, name: voice.name, text: '' })
+      dispatch({
+        type: 'ADD_DEBATE_MESSAGE',
+        payload: { speaker: nextSpeakerKey, name: voice.name, text: '' },
+      })
+
+      try {
+        await streamSseToText({
+          endpoint: provider.endpoint,
+          body: debateBody,
+          onTextDelta: (fullText) => {
+            debateSoFar[nextIndex].text = fullText
+            dispatch({ type: 'UPDATE_DEBATE_MESSAGE_TEXT', payload: { index: nextIndex, text: fullText } })
+          },
+        })
+      } catch (e) {
+        console.error('Debate stream error:', e)
+        dispatch({
+          type: 'UPDATE_DEBATE_MESSAGE_TEXT',
+          payload: { index: nextIndex, text: '*Error: Could not continue debate. Please try again.*' },
+        })
+      }
+    }
+
+    try {
+      dispatch({ type: 'SET_DEBATING', payload: true })
+      await streamDebateTurn('A')
+      await streamDebateTurn('B')
+    } catch {
+      // ignore: errors handled per turn
+    } finally {
+      dispatch({ type: 'SET_DEBATING', payload: false })
+    }
 
     dispatch({ type: 'STOP_LOADING' })
   }, [dispatch, getActiveFramework, getVoiceAProvider, getVoiceBProvider, state.mode, state.selectedBranch])
@@ -115,39 +189,15 @@ ${state.debateMessages.map(m => `${m.name}: ${m.text}`).join('\n')}
           voiceName: nextSpeaker.voice.name,
         }
     try {
-      const response = await fetch(nextSpeaker.provider.endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(debateBody),
-      })
-
-      const reader = response.body.getReader()
-      const decoder = new TextDecoder()
-      let fullText = ''
-
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-
-        const chunk = decoder.decode(value)
-        const lines = chunk.split('\n')
-
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            const data = line.slice(6)
-            if (data === '[DONE]') continue
-
-            try {
-              const parsed = JSON.parse(data)
-              if (parsed.text) fullText += parsed.text
-            } catch (e) {}
-          }
-        }
-      }
-
+      const nextIndex = state.debateMessages.length
       dispatch({
         type: 'ADD_DEBATE_MESSAGE',
-        payload: { speaker: nextSpeaker.key, name: nextSpeaker.voice.name, text: fullText },
+        payload: { speaker: nextSpeaker.key, name: nextSpeaker.voice.name, text: '' },
+      })
+      await streamSseToText({
+        endpoint: nextSpeaker.provider.endpoint,
+        body: debateBody,
+        onTextDelta: (fullText) => dispatch({ type: 'UPDATE_DEBATE_MESSAGE_TEXT', payload: { index: nextIndex, text: fullText } }),
       })
     } catch (error) {
       console.error('Error continuing debate:', error)

@@ -5,12 +5,12 @@ import VoiceCard from './components/VoiceCard'
 import DebateCard from './components/DebateCard'
 import InputArea from './components/InputArea'
 import LandingPage from './components/LandingPage'
-import SettingsDrawer from './components/SettingsDrawer'
+import SidePanel from './components/SidePanel'
 
 function App() {
-  const { state, getActiveFramework } = useApp()
+  const { state, dispatch, setMode, getActiveFramework } = useApp()
   const framework = getActiveFramework()
-  const [settingsOpen, setSettingsOpen] = useState(false)
+  const [panelOpen, setPanelOpen] = useState(false)
 
   const [hasEntered, setHasEntered] = useState(() => {
     try {
@@ -29,6 +29,18 @@ function App() {
     setHasEntered(true)
   }
 
+  const restartToLanding = () => {
+    dispatch({ type: 'CLEAR_RESPONSES' })
+    setPanelOpen(false)
+    setMode('default')
+    try {
+      sessionStorage.removeItem('divergent-has-entered')
+    } catch {
+      // ignore
+    }
+    setHasEntered(false)
+  }
+
   if (!hasEntered) {
     return (
       <div className="min-h-screen" data-mode="default">
@@ -39,8 +51,12 @@ function App() {
 
   return (
     <div className="min-h-screen appShell" data-mode={state.mode}>
-      <Header onOpenSettings={() => setSettingsOpen(true)} />
-      <SettingsDrawer open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+      <Header onOpenPanel={() => setPanelOpen(true)} onRestart={restartToLanding} />
+      <SidePanel
+        open={panelOpen}
+        onClose={() => setPanelOpen(false)}
+        onNewChat={restartToLanding}
+      />
 
       <main className="appMain">
         <div className="appSection">
