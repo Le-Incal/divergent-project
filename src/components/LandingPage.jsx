@@ -112,15 +112,15 @@ export default function LandingPage({ onEnter }) {
                 <ul className="landingHypotheses" style={{ marginTop: 'var(--space-4)' }}>
                   <li>
                     <span className="landingHypHighlight"><span className="landingHypNum">Hypothesis 01:</span></span>{' '}
-                    <span className="landingHypHighlight">Complete worldviews can be created for AI</span>
+                    AI voices can be built from epistemological operating systems, not just personality traits.
                   </li>
                   <li>
                     <span className="landingHypHighlight"><span className="landingHypNum">Hypothesis 02:</span></span>{' '}
-                    <span className="landingHypHighlight">Worldviews can be used to build unique LLM personas</span>
+                    Inverse reasoning architectures can hold structural separation under pressure.
                   </li>
                   <li>
                     <span className="landingHypHighlight"><span className="landingHypNum">Hypothesis 03:</span></span>{' '}
-                    <span className="landingHypHighlight">Opposing personas can organically debate each other</span>
+                    Genuine tension produces better decisions than consensus or single-perspective advice.
                   </li>
                 </ul>
               </div>
