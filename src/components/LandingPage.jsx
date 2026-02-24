@@ -111,16 +111,16 @@ export default function LandingPage({ onEnter }) {
                 </p>
                 <ul className="landingHypotheses" style={{ marginTop: 'var(--space-4)' }}>
                   <li>
-                    <span className="landingHypLabel"><span className="landingHypHighlight"><span className="landingHypNum">Hypothesis 01:</span></span></span>
-                    AI voices can be built from epistemological operating<br />systems, not just personality traits.
+                    <div className="landingHypLabel"><span className="landingHypHighlight"><span className="landingHypNum">Hypothesis 01:</span></span></div>
+                    <div className="landingHypBody">AI voices can be built from epistemological operating<br />systems, not just personality traits.</div>
                   </li>
                   <li>
-                    <span className="landingHypLabel"><span className="landingHypHighlight"><span className="landingHypNum">Hypothesis 02:</span></span></span>
-                    Inverse reasoning architectures can hold structural<br />separation under pressure.
+                    <div className="landingHypLabel"><span className="landingHypHighlight"><span className="landingHypNum">Hypothesis 02:</span></span></div>
+                    <div className="landingHypBody">Inverse reasoning architectures can hold structural<br />separation under pressure.</div>
                   </li>
                   <li>
-                    <span className="landingHypLabel"><span className="landingHypHighlight"><span className="landingHypNum">Hypothesis 03:</span></span></span>
-                    Genuine tension produces better decisions than<br />consensus or single-perspective advice.
+                    <div className="landingHypLabel"><span className="landingHypHighlight"><span className="landingHypNum">Hypothesis 03:</span></span></div>
+                    <div className="landingHypBody">Genuine tension produces better decisions than<br />consensus or single-perspective advice.</div>
                   </li>
                 </ul>
               </div>
