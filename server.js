@@ -12,6 +12,39 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
+
+// ElevenLabs Speech-to-Text: must be before express.json() so we receive raw audio body
+app.post('/api/stt', express.raw({ type: () => true, limit: '10mb' }), async (req, res) => {
+  try {
+    const apiKey = process.env.ELEVENLABS_API_KEY;
+    if (!apiKey) {
+      return res.status(503).json({ error: 'STT not configured: ELEVENLABS_API_KEY missing' });
+    }
+    if (!req.body || !Buffer.isBuffer(req.body) || req.body.length === 0) {
+      return res.status(400).json({ error: 'Missing or invalid audio body' });
+    }
+    const formData = new FormData();
+    formData.append('file', new Blob([req.body]), 'audio.webm');
+    formData.append('model_id', 'scribe_v2');
+    const response = await fetch('https://api.elevenlabs.io/v1/speech-to-text', {
+      method: 'POST',
+      headers: { 'xi-api-key': apiKey },
+      body: formData,
+    });
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error('ElevenLabs STT error:', response.status, errText);
+      return res.status(response.status).json({ error: 'Transcription failed' });
+    }
+    const data = await response.json();
+    const text = data.text ?? (data.transcripts?.[0]?.text ?? '');
+    res.json({ text: text || '' });
+  } catch (error) {
+    console.error('STT handler error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 app.use(express.json());
 
 // Serve static files from the dist folder
@@ -436,4 +469,9 @@ app.get('*', (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`Divergent server running on port ${PORT}`);
+  if (process.env.ELEVENLABS_API_KEY) {
+    console.log('ElevenLabs: API key configured (STT + TTS)');
+  } else {
+    console.log('ElevenLabs: no API key (set ELEVENLABS_API_KEY for voice input/output)');
+  }
 });

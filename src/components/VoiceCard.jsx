@@ -1,15 +1,10 @@
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import { useApp } from '../context/AppContext'
-
-function stripMarkdownForTTS(text) {
-  if (!text || typeof text !== 'string') return ''
-  return text.replace(/\*\*(.+?)\*\*/g, '$1').replace(/\*(.+?)\*/g, '$1').trim()
-}
+import { playTTS } from '../utils/tts'
 
 export default function VoiceCard({ voice, type, response, isLoading }) {
   const { getVoiceAProvider, getVoiceBProvider, getVoiceASpeakerVoiceId, getVoiceBSpeakerVoiceId } = useApp()
   const [isPlaying, setIsPlaying] = useState(false)
-  const audioRef = useRef(null)
   const isLeftCard = type === 'challenger'
   const provider = isLeftCard ? getVoiceAProvider() : getVoiceBProvider()
   const speakerVoiceId = isLeftCard ? getVoiceASpeakerVoiceId() : getVoiceBSpeakerVoiceId()
@@ -18,31 +13,10 @@ export default function VoiceCard({ voice, type, response, isLoading }) {
     if (!response || !speakerVoiceId || isPlaying) return
     setIsPlaying(true)
     try {
-      const res = await fetch('/api/tts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: stripMarkdownForTTS(response), voiceId: speakerVoiceId }),
-      })
-      if (!res.ok) throw new Error('TTS failed')
-      const blob = await res.blob()
-      const url = URL.createObjectURL(blob)
-      if (audioRef.current) {
-        audioRef.current.pause()
-        audioRef.current.src = ''
-      }
-      const audio = new Audio(url)
-      audioRef.current = audio
-      audio.onended = () => {
-        setIsPlaying(false)
-        URL.revokeObjectURL(url)
-      }
-      audio.onerror = () => {
-        setIsPlaying(false)
-        URL.revokeObjectURL(url)
-      }
-      await audio.play()
+      await playTTS(response, speakerVoiceId)
     } catch (e) {
       console.error('TTS play error:', e)
+    } finally {
       setIsPlaying(false)
     }
   }

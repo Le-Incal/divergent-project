@@ -55,7 +55,8 @@ export const PROVIDERS = {
 export const DEFAULT_MODE_PROVIDERS = ['claude', 'openai', 'gemini', 'grok']
 export const SANDPIT_PROVIDERS = ['claude', 'openai', 'gemini', 'grok']
 
-// ElevenLabs speaker voices (paste your voice IDs from ElevenLabs Voice Library).
+// ElevenLabs speaker voices. Get voice IDs from elevenlabs.io → Voice Library; paste into voiceId.
+// Settings → Speakers uses these for Ethos (Voice A) and Ego (Voice B). Play buttons use ELEVENLABS_API_KEY.
 export const VOICES = [
   { id: 'male-1', name: 'James', voiceId: 'REPLACE_WITH_ELEVENLABS_VOICE_ID', gender: 'male' },
   { id: 'female-1', name: 'Sarah', voiceId: 'REPLACE_WITH_ELEVENLABS_VOICE_ID', gender: 'female' },
