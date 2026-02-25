@@ -60,22 +60,49 @@ function App() {
 
       <main className="appMain">
         <div className="appSection">
-          <div className="appGrid">
-            <VoiceCard
-              voice={framework.voiceA}
-              type={framework.id === 'ethos-ego' ? 'champion' : 'challenger'}
-              response={state.voiceAResponse}
-              isLoading={state.isLoading}
-            />
-            <VoiceCard
-              voice={framework.voiceB}
-              type={framework.id === 'ethos-ego' ? 'challenger' : 'champion'}
-              response={state.voiceBResponse}
-              isLoading={state.isLoading}
-            />
-          </div>
+          {state.userInput && (
+            <section className="card userQuestionCard">
+              <div className="sectionLabel">Original Question</div>
+              <p className="userQuestionText">{state.userInput}</p>
+            </section>
+          )}
 
-          {(state.voiceAResponse || state.voiceBResponse || state.debateMessages.length > 0) && <DebateCard />}
+          {state.clarificationPrompt && (
+            <section className="card clarificationCard">
+              <div className="sectionLabel">Clarification</div>
+              <p className="clarificationText">{state.clarificationPrompt}</p>
+              {state.awaitingClarification && (
+                <p className="clarificationHint">Reply below to continue. Debate will wait until you explicitly start it.</p>
+              )}
+            </section>
+          )}
+
+          {!state.awaitingClarification && (state.isLoading || state.voiceAResponse || state.voiceBResponse) && (
+            <section className="sectionBlock">
+              <div className="sectionLabel">Response</div>
+              <div className="appGrid">
+                <VoiceCard
+                  voice={framework.voiceA}
+                  type={framework.id === 'ethos-ego' ? 'champion' : 'challenger'}
+                  response={state.voiceAResponse}
+                  isLoading={state.isLoading}
+                />
+                <VoiceCard
+                  voice={framework.voiceB}
+                  type={framework.id === 'ethos-ego' ? 'challenger' : 'champion'}
+                  response={state.voiceBResponse}
+                  isLoading={state.isLoading}
+                />
+              </div>
+            </section>
+          )}
+
+          {(state.voiceAResponse || state.voiceBResponse || state.debateMessages.length > 0) && (
+            <section className="sectionBlock">
+              <div className="sectionLabel">Debate</div>
+              <DebateCard />
+            </section>
+          )}
         </div>
 
         <InputArea />

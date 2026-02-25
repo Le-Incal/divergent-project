@@ -13,7 +13,7 @@ export default function DebateCard() {
   const currentRounds = 1 + state.debateMessages.length
   const atRoundLimit = currentRounds >= maxRounds
   
-  const hasRealResponses = state.voiceAResponse && state.voiceBResponse
+  const hasRealResponses = !!(state.voiceAResponse || state.voiceBResponse)
   const canPlayDebate = (state.voiceAResponse || state.voiceBResponse) && (getVoiceASpeakerVoiceId() || getVoiceBSpeakerVoiceId())
 
   const handlePlayDebate = async () => {
@@ -34,14 +34,7 @@ export default function DebateCard() {
     }
   }
   
-  const demoDebate = [
-    { speaker: 'A', name: framework.voiceA.name, text: '"Boldest version of yourself"—that\'s <em>romantic</em>, but let\'s get specific. <strong>What happens when this fails?</strong>' },
-    { speaker: 'B', name: framework.voiceB.name, text: 'And what happens when you <em>don\'t</em> act? Your risk analysis is just <strong>fear dressed up in a spreadsheet.</strong>' },
-    { speaker: 'A', name: framework.voiceA.name, text: 'Fear dressed up? I call it <strong>wisdom.</strong> <strong>Preparation isn\'t paralysis</strong>—it\'s the difference between courage and recklessness.' },
-    { speaker: 'B', name: framework.voiceB.name, text: 'And the graveyard of <em>regret</em> is full of people who prepared forever. <strong>The information you need only exists on the other side of action.</strong>' },
-  ]
-  
-  const debateContent = hasRealResponses ? state.debateMessages : demoDebate
+  const debateContent = state.debateMessages
   
   return (
     <section className="card debateCard">
@@ -89,7 +82,7 @@ export default function DebateCard() {
           <button type="button" className="btn btn-secondary" onClick={() => setSelectedBranch('ego')}>
             Follow {framework?.voiceB?.name}
           </button>
-          <button type="button" className="btn btn-primary" onClick={continueDebate} disabled={state.isDebating || atRoundLimit}>
+          <button type="button" className="btn btn-primary" onClick={continueDebate} disabled={state.isDebating || atRoundLimit || !hasRealResponses}>
             {state.isDebating ? 'Debating…' : atRoundLimit ? `Round limit (${maxRounds})` : 'Continue debate'}
           </button>
           <button type="button" className="btn btn-accent" onClick={() => fetchResolution()} disabled={isResolving || !hasRealResponses}>

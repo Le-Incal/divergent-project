@@ -235,6 +235,9 @@ const initialState = {
   // Debate overlap slider: app feature only. 0 = turn-taking playback, 100 = both at once. Does not grant/revoke permission; agents decide overlap by personality. Slider = ceiling on playback.
   debateOverlap: 50,
   userInput: '',
+  clarificationPrompt: null,
+  clarificationReply: '',
+  awaitingClarification: false,
   isLoading: false,
   voiceAResponse: null,
   voiceBResponse: null,
@@ -290,6 +293,21 @@ const reducer = (state, action) => {
         { ...state, userInput: action.payload },
         { userInput: action.payload, title: String(action.payload || '').slice(0, 64) },
       )
+    case 'SET_CLARIFICATION_PROMPT':
+      return applyActiveChatPatch(
+        { ...state, clarificationPrompt: action.payload },
+        { clarificationPrompt: action.payload },
+      )
+    case 'SET_CLARIFICATION_REPLY':
+      return applyActiveChatPatch(
+        { ...state, clarificationReply: action.payload },
+        { clarificationReply: action.payload },
+      )
+    case 'SET_AWAITING_CLARIFICATION':
+      return applyActiveChatPatch(
+        { ...state, awaitingClarification: !!action.payload },
+        { awaitingClarification: !!action.payload },
+      )
     case 'START_LOADING':
       return { ...state, isLoading: true }
     case 'SET_VOICE_A_RESPONSE':
@@ -315,7 +333,19 @@ const reducer = (state, action) => {
     case 'SET_DEBATING':
       return { ...state, isDebating: action.payload }
     case 'CLEAR_RESPONSES':
-      return { ...state, voiceAResponse: null, voiceBResponse: null, debateMessages: [], userInput: '', selectedBranch: null, resolutionText: null, activeChatId: null }
+      return {
+        ...state,
+        voiceAResponse: null,
+        voiceBResponse: null,
+        debateMessages: [],
+        userInput: '',
+        clarificationPrompt: null,
+        clarificationReply: '',
+        awaitingClarification: false,
+        selectedBranch: null,
+        resolutionText: null,
+        activeChatId: null,
+      }
     case 'SET_SELECTED_BRANCH':
       return { ...state, selectedBranch: action.payload }
     case 'SET_RESOLUTION':
@@ -332,6 +362,9 @@ const reducer = (state, action) => {
         mode: state.mode,
         frameworkId: state.activeFramework,
         userInput: payload.userInput ?? state.userInput ?? '',
+        clarificationPrompt: payload.clarificationPrompt ?? null,
+        clarificationReply: payload.clarificationReply ?? '',
+        awaitingClarification: !!payload.awaitingClarification,
         voiceAResponse: '',
         voiceBResponse: '',
         debateMessages: [],
@@ -353,6 +386,9 @@ const reducer = (state, action) => {
         mode: chat.mode || state.mode,
         activeFramework: chat.frameworkId || state.activeFramework,
         userInput: chat.userInput || '',
+        clarificationPrompt: chat.clarificationPrompt ?? null,
+        clarificationReply: chat.clarificationReply ?? '',
+        awaitingClarification: !!chat.awaitingClarification,
         voiceAResponse: chat.voiceAResponse ?? null,
         voiceBResponse: chat.voiceBResponse ?? null,
         debateMessages: Array.isArray(chat.debateMessages) ? chat.debateMessages : [],

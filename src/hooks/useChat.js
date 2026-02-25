@@ -13,17 +13,31 @@ export function useChat() {
       body: JSON.stringify(body),
     })
 
-    if (!response.ok) throw new Error('API request failed')
+    if (!response.ok) {
+      const raw = await response.text()
+      let detail = ''
+      try {
+        const parsed = JSON.parse(raw)
+        detail = parsed?.error ? `: ${parsed.error}` : ''
+      } catch {
+        detail = raw ? `: ${raw}` : ''
+      }
+      throw new Error(`API request failed (${response.status})${detail}`)
+    }
+
+    if (!response.body) throw new Error('Streaming response body was empty')
     const reader = response.body.getReader()
     const decoder = new TextDecoder()
     let fullText = ''
+    let buffer = ''
 
     while (true) {
       const { done, value } = await reader.read()
       if (done) break
 
-      const chunk = decoder.decode(value)
-      const lines = chunk.split('\n')
+      buffer += decoder.decode(value, { stream: true })
+      const lines = buffer.split('\n')
+      buffer = lines.pop() ?? ''
 
       for (const line of lines) {
         if (!line.startsWith('data: ')) continue
@@ -42,117 +56,138 @@ export function useChat() {
     return fullText
   }
 
-  const sendMessage = useCallback(async (message) => {
+  const streamVoiceResponse = useCallback(async ({ framework, message, voiceKey, setterAction, provider }) => {
+    const isEthosEgo = framework.id === 'ethos-ego'
+    const voice = voiceKey === 'voiceA' ? framework.voiceA : framework.voiceB
+
+    try {
+      const body = isEthosEgo
+        ? {
+            message,
+            voice: voiceKey === 'voiceA' ? 'ethos' : 'ego',
+            mode: state.mode,
+            appendTransition: state.selectedBranch === (voiceKey === 'voiceA' ? 'ethos' : 'ego') ? (voiceKey === 'voiceA' ? 'ethos' : 'ego') : null,
+            voiceName: voice.name,
+          }
+        : { message, systemPrompt: voice.systemPrompt, voiceName: voice.name }
+      return await streamSseToText({
+        endpoint: provider.endpoint,
+        body,
+        onTextDelta: (fullText) => dispatch({ type: setterAction, payload: fullText }),
+      })
+    } catch (error) {
+      console.error(`Error streaming ${voice.name}:`, error)
+      dispatch({ type: setterAction, payload: `*Error: Could not get response. ${error?.message || ''}*` })
+      return ''
+    } finally {
+      setIsStreaming((prev) => ({ ...prev, [voiceKey]: false }))
+    }
+  }, [dispatch, state.mode, state.selectedBranch])
+
+  const askClarifyingQuestion = useCallback(async (message) => {
     const framework = getActiveFramework()
-    const providerA = getVoiceAProvider()
-    const providerB = getVoiceBProvider()
-    
-    dispatch({ type: 'START_NEW_CHAT', payload: { title: message, userInput: message } })
+    const providerA = getVoiceAProvider() || PROVIDERS.claude
+    const isEthosEgo = framework.id === 'ethos-ego'
+
+    dispatch({
+      type: 'START_NEW_CHAT',
+      payload: { title: message, userInput: message, awaitingClarification: true, clarificationPrompt: '', clarificationReply: '' },
+    })
     dispatch({ type: 'START_LOADING' })
+    dispatch({ type: 'SET_AWAITING_CLARIFICATION', payload: true })
+    dispatch({ type: 'SET_CLARIFICATION_PROMPT', payload: '' })
+    dispatch({ type: 'SET_CLARIFICATION_REPLY', payload: '' })
     dispatch({ type: 'SET_VOICE_A_RESPONSE', payload: '' })
     dispatch({ type: 'SET_VOICE_B_RESPONSE', payload: '' })
     dispatch({ type: 'CLEAR_DEBATE_MESSAGES' })
-    
-    setIsStreaming({ voiceA: true, voiceB: true })
+    dispatch({ type: 'SET_DEBATING', payload: false })
 
-    const isEthosEgo = framework.id === 'ethos-ego'
-    const streamVoice = async (voice, voiceKey, setterAction, provider) => {
-      try {
-        const body = isEthosEgo
-          ? {
-              message,
-              voice: voiceKey === 'voiceA' ? 'ethos' : 'ego',
-              mode: state.mode,
-              appendTransition: state.selectedBranch === (voiceKey === 'voiceA' ? 'ethos' : 'ego') ? (voiceKey === 'voiceA' ? 'ethos' : 'ego') : null,
-              voiceName: voice.name,
-            }
-          : { message, systemPrompt: voice.systemPrompt, voiceName: voice.name }
-        return await streamSseToText({
-          endpoint: provider.endpoint,
-          body,
-          onTextDelta: (fullText) => dispatch({ type: setterAction, payload: fullText }),
-        })
-      } catch (error) {
-        console.error(`Error streaming ${voice.name}:`, error)
-        dispatch({ type: setterAction, payload: `*Error: Could not get response. Please try again.*` })
-        return ''
-      } finally {
-        setIsStreaming(prev => ({ ...prev, [voiceKey]: false }))
-      }
-    }
-
-    const [voiceAThesis, voiceBThesis] = await Promise.all([
-      streamVoice(framework.voiceA, 'voiceA', 'SET_VOICE_A_RESPONSE', providerA),
-      streamVoice(framework.voiceB, 'voiceB', 'SET_VOICE_B_RESPONSE', providerB),
-    ])
-
-    // Immediately follow theses with antithesis: a short streamed debate exchange.
-    // Turn order: A responds to B, then B responds to A.
-    const debateSoFar = []
-    const streamDebateTurn = async (nextSpeakerKey) => {
-      const provider = nextSpeakerKey === 'A' ? providerA : providerB
-      const voice = nextSpeakerKey === 'A' ? framework.voiceA : framework.voiceB
-
-      const context = `
-Initial theses:
-${framework.voiceA.name}: ${voiceAThesis}
-${framework.voiceB.name}: ${voiceBThesis}
-
-Debate so far:
-${debateSoFar.map((m) => `${m.name}: ${m.text}`).join('\n')}
-`
-
-      const debateBody = isEthosEgo
-        ? {
-            message: `Debate now. Directly respond to the other voice's thesis. Be punchy and adversarial. Context:\n${context}`,
-            voice: nextSpeakerKey === 'A' ? 'ethos' : 'ego',
-            mode: state.mode,
-            appendTransition: state.selectedBranch === (nextSpeakerKey === 'A' ? 'ethos' : 'ego') ? (nextSpeakerKey === 'A' ? 'ethos' : 'ego') : null,
-            voiceName: voice.name,
-          }
-        : {
-            message: `Debate now. Directly respond to the other voice's thesis. Be punchy and adversarial. Context:\n${context}`,
-            systemPrompt: voice.systemPrompt + '\n\nKeep your response concise - 2-3 sentences max. Be punchy and provocative.',
-            voiceName: voice.name,
-          }
-
-      const nextIndex = debateSoFar.length
-      debateSoFar.push({ speaker: nextSpeakerKey, name: voice.name, text: '' })
-      dispatch({
-        type: 'ADD_DEBATE_MESSAGE',
-        payload: { speaker: nextSpeakerKey, name: voice.name, text: '' },
-      })
-
-      try {
-        await streamSseToText({
-          endpoint: provider.endpoint,
-          body: debateBody,
-          onTextDelta: (fullText) => {
-            debateSoFar[nextIndex].text = fullText
-            dispatch({ type: 'UPDATE_DEBATE_MESSAGE_TEXT', payload: { index: nextIndex, text: fullText } })
-          },
-        })
-      } catch (e) {
-        console.error('Debate stream error:', e)
-        dispatch({
-          type: 'UPDATE_DEBATE_MESSAGE_TEXT',
-          payload: { index: nextIndex, text: '*Error: Could not continue debate. Please try again.*' },
-        })
-      }
-    }
-
+    setIsStreaming({ voiceA: true, voiceB: false })
     try {
-      dispatch({ type: 'SET_DEBATING', payload: true })
-      await streamDebateTurn('A')
-      await streamDebateTurn('B')
-    } catch {
-      // ignore: errors handled per turn
+      const question = await streamSseToText({
+        endpoint: providerA.endpoint,
+        body: isEthosEgo
+          ? {
+              message: `User question:\n${message}\n\nBefore giving any advice or debate, ask exactly one concise clarifying question. Output only that question.`,
+              voice: 'ethos',
+              mode: state.mode,
+              appendTransition: state.selectedBranch === 'ethos' ? 'ethos' : null,
+              voiceName: framework.voiceA.name,
+            }
+          : {
+              message: `User question:\n${message}\n\nBefore giving any advice or debate, ask exactly one concise clarifying question. Output only that question.`,
+              systemPrompt: framework.voiceA.systemPrompt,
+              voiceName: framework.voiceA.name,
+            },
+        onTextDelta: (fullText) => dispatch({ type: 'SET_CLARIFICATION_PROMPT', payload: fullText }),
+      })
+      if (!question?.trim()) {
+        dispatch({ type: 'SET_CLARIFICATION_PROMPT', payload: 'Before we proceed, what specific outcome do you want from this decision?' })
+      }
+    } catch (error) {
+      console.error('Error generating clarifying question:', error)
+      dispatch({ type: 'SET_CLARIFICATION_PROMPT', payload: `*Error: Could not generate clarifying question. ${error?.message || ''}*` })
+      dispatch({ type: 'SET_AWAITING_CLARIFICATION', payload: false })
+      dispatch({
+        type: 'SET_VOICE_A_RESPONSE',
+        payload: '*Error: Could not respond right now. Please retry once the API connection is available.*',
+      })
+      dispatch({
+        type: 'SET_VOICE_B_RESPONSE',
+        payload: '*Error: Could not respond right now. Please retry once the API connection is available.*',
+      })
     } finally {
-      dispatch({ type: 'SET_DEBATING', payload: false })
+      setIsStreaming({ voiceA: false, voiceB: false })
+      dispatch({ type: 'STOP_LOADING' })
+    }
+  }, [dispatch, getActiveFramework, getVoiceAProvider, state.mode, state.selectedBranch])
+
+  const generateInitialResponses = useCallback(async (clarificationReply) => {
+    const framework = getActiveFramework()
+    const providerA = getVoiceAProvider()
+    const providerB = getVoiceBProvider()
+    const originalQuestion = state.userInput || ''
+    const responsePrompt = `Original user question:\n${originalQuestion}\n\nClarification from user:\n${clarificationReply}\n\nNow provide your direct response to the user. Do not debate the other voice yet.`
+
+    dispatch({ type: 'START_LOADING' })
+    dispatch({ type: 'SET_AWAITING_CLARIFICATION', payload: false })
+    dispatch({ type: 'SET_CLARIFICATION_REPLY', payload: clarificationReply })
+    dispatch({ type: 'SET_VOICE_A_RESPONSE', payload: '' })
+    dispatch({ type: 'SET_VOICE_B_RESPONSE', payload: '' })
+    dispatch({ type: 'CLEAR_DEBATE_MESSAGES' })
+    dispatch({ type: 'SET_DEBATING', payload: false })
+
+    setIsStreaming({ voiceA: true, voiceB: true })
+    await Promise.all([
+      streamVoiceResponse({
+        framework,
+        message: responsePrompt,
+        voiceKey: 'voiceA',
+        setterAction: 'SET_VOICE_A_RESPONSE',
+        provider: providerA,
+      }),
+      streamVoiceResponse({
+        framework,
+        message: responsePrompt,
+        voiceKey: 'voiceB',
+        setterAction: 'SET_VOICE_B_RESPONSE',
+        provider: providerB,
+      }),
+    ])
+    dispatch({ type: 'STOP_LOADING' })
+  }, [dispatch, getActiveFramework, getVoiceAProvider, getVoiceBProvider, state.userInput, streamVoiceResponse])
+
+  const sendMessage = useCallback(async (message) => {
+    const trimmed = String(message || '').trim()
+    if (!trimmed) return
+
+    if (state.awaitingClarification && state.userInput) {
+      await generateInitialResponses(trimmed)
+      return
     }
 
-    dispatch({ type: 'STOP_LOADING' })
-  }, [dispatch, getActiveFramework, getVoiceAProvider, getVoiceBProvider, state.mode, state.selectedBranch])
+    await askClarifyingQuestion(trimmed)
+  }, [askClarifyingQuestion, generateInitialResponses, state.awaitingClarification, state.userInput])
 
   const continueDebate = useCallback(async () => {
     const framework = getActiveFramework()

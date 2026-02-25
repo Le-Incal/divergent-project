@@ -14,7 +14,7 @@ export default function Header({ onOpenPanel, onRestart }) {
     <nav className={`topNav ${scrolled ? 'isScrolled' : ''}`} aria-label="Primary">
       <div className="topNavInner">
         <button type="button" className="topNavBrandBtn" onClick={onRestart} aria-label="Restart and start a new chat">
-          <span className="topNavBrand">DIVERGENT</span>
+          <span className="topNavBrand" aria-hidden="true">Divergent</span>
         </button>
         <div className="topNavActions">
           <button type="button" className="hamburgerBtn" onClick={onOpenPanel} aria-label="Open panel">
