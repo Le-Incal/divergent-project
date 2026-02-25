@@ -12,6 +12,8 @@ export default function SidePanel({ open, onClose, onNewChat }) {
   const {
     state,
     loadChat,
+    deleteChat,
+    deleteAllChats,
     setMode,
     setFramework,
     setVoiceAProvider,
@@ -21,6 +23,8 @@ export default function SidePanel({ open, onClose, onNewChat }) {
     setDebateOverlap,
     getActiveFramework,
   } = useApp()
+
+  const [confirmDeleteAll, setConfirmDeleteAll] = useState(false)
 
   const framework = getActiveFramework()
   const voiceALabel = framework?.voiceA?.name ?? 'Voice A'
@@ -38,15 +42,15 @@ export default function SidePanel({ open, onClose, onNewChat }) {
   return createPortal(
     <>
       <button type="button" className="panelBackdrop" onClick={onClose} aria-label="Close panel" />
-      <aside className="panel" role="dialog" aria-label="Panel">
+      <aside className="panel" role="dialog" aria-label="Settings" data-mode={state.mode}>
         <div className="panelHeader">
-          <div className="panelTitle">Panel</div>
+          <div className="panelTitle">Settings</div>
           <button type="button" className="btn btn-secondary" onClick={onClose}>
             Close
           </button>
         </div>
 
-        <div className="panelTabs" role="tablist" aria-label="Panel tabs">
+        <div className="panelTabs" role="tablist" aria-label="Settings tabs">
           {TABS.map((t) => (
             <button
               key={t.id}
@@ -70,18 +74,31 @@ export default function SidePanel({ open, onClose, onNewChat }) {
               ) : (
                 <div className="historyList" role="list">
                   {histories.map((h) => (
-                    <button
+                    <div
                       key={h.id}
-                      type="button"
-                      role="listitem"
                       className={`historyItem ${state.activeChatId === h.id ? 'isActive' : ''}`}
-                      onClick={() => loadChat(h.id)}
+                      role="listitem"
                     >
-                      <div className="historyTitle">{h.title || 'Untitled'}</div>
-                      <div className="historyMeta">
-                        {(h.frameworkId && FRAMEWORKS[h.frameworkId]?.name) || h.frameworkId || '—'} · {new Date(h.createdAt || Date.now()).toLocaleString()}
-                      </div>
-                    </button>
+                      <button
+                        type="button"
+                        className="historyItemMain"
+                        onClick={() => { loadChat(h.id); onClose() }}
+                      >
+                        <span className="historyTitle">{h.title || 'Untitled'}</span>
+                        <span className="historyMeta">
+                          {new Date(h.createdAt || Date.now()).toLocaleDateString()}
+                        </span>
+                      </button>
+                      <button
+                        type="button"
+                        className="historyDeleteBtn"
+                        onClick={() => deleteChat(h.id)}
+                        aria-label={`Delete "${h.title || 'Untitled'}"`}
+                        title="Delete chat"
+                      >
+                        ×
+                      </button>
+                    </div>
                   ))}
                 </div>
               )}
@@ -89,6 +106,35 @@ export default function SidePanel({ open, onClose, onNewChat }) {
                 <button type="button" className="btn btn-primary btn-arrow" onClick={onNewChat}>
                   New chat
                 </button>
+                {histories.length > 0 && (
+                  confirmDeleteAll ? (
+                    <div className="historyDeleteAllConfirm">
+                      <span className="historyDeleteAllMsg">Delete all chats?</span>
+                      <button
+                        type="button"
+                        className="btn btn-danger"
+                        onClick={() => { deleteAllChats(); setConfirmDeleteAll(false) }}
+                      >
+                        Yes, delete all
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-secondary"
+                        onClick={() => setConfirmDeleteAll(false)}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      className="btn btn-ghost-danger"
+                      onClick={() => setConfirmDeleteAll(true)}
+                    >
+                      Delete all
+                    </button>
+                  )
+                )}
               </div>
             </div>
           )}

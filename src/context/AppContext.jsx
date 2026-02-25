@@ -12,7 +12,7 @@ function safeJsonParse(value, fallback) {
   }
 }
 
-function makeId() {
+export function makeId() {
   try {
     return crypto.randomUUID()
   } catch {
@@ -232,19 +232,23 @@ const initialState = {
   voiceBProvider: 'claude',
   voiceAVoiceId: VOICES[0]?.id ?? 'male-1',
   voiceBVoiceId: VOICES[1]?.id ?? 'female-1',
-  // Debate overlap slider: app feature only. 0 = turn-taking playback, 100 = both at once. Does not grant/revoke permission; agents decide overlap by personality. Slider = ceiling on playback.
   debateOverlap: 50,
   userInput: '',
-  clarificationPrompt: null,
-  clarificationReply: '',
-  awaitingClarification: false,
   isLoading: false,
+  // Legacy fields kept for side panel / resolution
   voiceAResponse: null,
   voiceBResponse: null,
   debateMessages: [],
   isDebating: false,
-  selectedBranch: null, // 'ethos' | 'ego' | null; when set, ST-1/ST-2 appended for that voice
-  resolutionText: null, // O-2 neutral summary when exchange ends
+  selectedBranch: null,
+  resolutionText: null,
+  clarificationPrompt: null,
+  clarificationReply: '',
+  awaitingClarification: false,
+  // Conversation stream
+  messages: [],
+  chatPhase: 'idle',       // 'idle' | 'clarifying' | 'advising'
+  clarificationRound: 0,
   chatHistories: [],
   activeChatId: null,
 }
@@ -308,6 +312,25 @@ const reducer = (state, action) => {
         { ...state, awaitingClarification: !!action.payload },
         { awaitingClarification: !!action.payload },
       )
+    case 'ADD_MESSAGE': {
+      const msg = action.payload
+      const next = [...state.messages, msg]
+      return applyActiveChatPatch({ ...state, messages: next }, { messages: next })
+    }
+    case 'UPDATE_MESSAGE_TEXT': {
+      const { id, text } = action.payload || {}
+      const next = state.messages.map(m => m.id === id ? { ...m, text: text ?? '' } : m)
+      return applyActiveChatPatch({ ...state, messages: next }, { messages: next })
+    }
+    case 'SET_MESSAGE_STREAMING': {
+      const { id, isStreaming } = action.payload || {}
+      const next = state.messages.map(m => m.id === id ? { ...m, isStreaming } : m)
+      return { ...state, messages: next }
+    }
+    case 'SET_CHAT_PHASE':
+      return { ...state, chatPhase: action.payload }
+    case 'SET_CLARIFICATION_ROUND':
+      return { ...state, clarificationRound: action.payload }
     case 'START_LOADING':
       return { ...state, isLoading: true }
     case 'SET_VOICE_A_RESPONSE':
@@ -342,6 +365,9 @@ const reducer = (state, action) => {
         clarificationPrompt: null,
         clarificationReply: '',
         awaitingClarification: false,
+        messages: [],
+        chatPhase: 'idle',
+        clarificationRound: 0,
         selectedBranch: null,
         resolutionText: null,
         activeChatId: null,
@@ -368,10 +394,16 @@ const reducer = (state, action) => {
         voiceAResponse: '',
         voiceBResponse: '',
         debateMessages: [],
+        messages: [],
+        chatPhase: 'idle',
+        clarificationRound: 0,
         resolutionText: null,
       }
       return {
         ...state,
+        messages: [],
+        chatPhase: 'idle',
+        clarificationRound: 0,
         activeChatId: id,
         chatHistories: [entry, ...state.chatHistories].slice(0, 50),
       }
@@ -386,15 +418,49 @@ const reducer = (state, action) => {
         mode: chat.mode || state.mode,
         activeFramework: chat.frameworkId || state.activeFramework,
         userInput: chat.userInput || '',
-        clarificationPrompt: chat.clarificationPrompt ?? null,
-        clarificationReply: chat.clarificationReply ?? '',
-        awaitingClarification: !!chat.awaitingClarification,
         voiceAResponse: chat.voiceAResponse ?? null,
         voiceBResponse: chat.voiceBResponse ?? null,
         debateMessages: Array.isArray(chat.debateMessages) ? chat.debateMessages : [],
+        messages: Array.isArray(chat.messages) ? chat.messages : [],
+        chatPhase: chat.chatPhase || 'idle',
+        clarificationRound: chat.clarificationRound || 0,
         resolutionText: chat.resolutionText ?? null,
       }
     }
+    case 'DELETE_CHAT': {
+      const id = action.payload
+      const filtered = state.chatHistories.filter((c) => c.id !== id)
+      const wasActive = state.activeChatId === id
+      return {
+        ...state,
+        chatHistories: filtered,
+        ...(wasActive ? {
+          activeChatId: null,
+          messages: [],
+          chatPhase: 'idle',
+          clarificationRound: 0,
+          userInput: '',
+          voiceAResponse: null,
+          voiceBResponse: null,
+          debateMessages: [],
+          resolutionText: null,
+        } : {}),
+      }
+    }
+    case 'DELETE_ALL_CHATS':
+      return {
+        ...state,
+        chatHistories: [],
+        activeChatId: null,
+        messages: [],
+        chatPhase: 'idle',
+        clarificationRound: 0,
+        userInput: '',
+        voiceAResponse: null,
+        voiceBResponse: null,
+        debateMessages: [],
+        resolutionText: null,
+      }
     default:
       return state
   }
@@ -464,6 +530,8 @@ export function AppProvider({ children }) {
     setResolution: (text) => dispatch({ type: 'SET_RESOLUTION', payload: text }),
     startNewChat: (title, userInput) => dispatch({ type: 'START_NEW_CHAT', payload: { title, userInput } }),
     loadChat: (id) => dispatch({ type: 'LOAD_CHAT', payload: id }),
+    deleteChat: (id) => dispatch({ type: 'DELETE_CHAT', payload: id }),
+    deleteAllChats: () => dispatch({ type: 'DELETE_ALL_CHATS' }),
   }
   
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>
