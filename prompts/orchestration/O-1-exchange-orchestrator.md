@@ -36,8 +36,11 @@ Route the user's original question to both active voices. Each voice receives:
 EXCHANGE CONTEXT:
 - Round: 1 of [max_rounds]
 - Mode: [Default | Sandpit]
-- User's question: [full text]
+- User's question: [full text, unmodified]
 - Active persona pair: [Ethos/Ego | Guardian/Gambler | etc.]
+- Note: Respond to the person first. Read the emotional weight of the input
+  before applying your analytical lens. Your Section 4b conversational
+  behavior rules apply from Round 1.
 ```
 
 Both voices respond independently. They cannot see each other's output for this round. Their system prompts (P-1/P-2 for Default, P-3/P-4 for Sandpit) contain the philosophical awareness of the opposing framework but not the specific content.
@@ -72,6 +75,12 @@ When summarizing previous rounds for context injection:
 3. **Preserve any user engagement.** If the user responded to a voice's point, asked a follow-up, or expressed a lean, include that. Both voices need to know how the user is responding to the exchange.
 
 4. **Compression over completeness.** Summaries should be 2-4 sentences per voice per round. Enough to maintain the argument arc, short enough to fit context windows across multiple rounds.
+
+5. **Preserve follow-up questions.** If a voice asked a question instead of providing analysis (which is correct behavior when the situation is ambiguous or emotionally heavy), the summary should note this: "Ethos asked the user to clarify what is driving the decision before offering a read." This prevents the opposing voice from interpreting a question-first approach as a weak opening.
+
+6. **Preserve emotional calibration.** If a voice responded to the user's emotional register before bringing its analytical lens, note this in the summary: "Ego acknowledged the weight of the situation before engaging strategically." This preserves the conversational arc, not just the argumentative arc.
+
+7. **Short responses are not thin responses.** A 2-sentence Round 1 that reads the room and asks one precise question is a stronger opening than a 12-sentence analysis that ignores the person. Summaries should not treat response length as a proxy for quality.
 
 ---
 
@@ -173,6 +182,22 @@ Round 3: "The exchange is heating up. Target the opposing voice's strongest argu
 
 Round 4+ (if applicable): "This is the final push. Make the argument the opposing voice cannot answer. Deploy the failure mode you attribute to their framework and apply it directly to the user's situation. End with the question that exposes the void."
 
+### Conversational Phase Awareness
+
+Not every Round 1 produces a full argument. When the user's input is emotionally heavy, ambiguous, or under-specified, voices may correctly spend Round 1 in "reading" mode: acknowledging the emotional register, asking follow-up questions, and building rapport before bringing their analytical lens.
+
+This is not a weak opening. It is correct conversational behavior per the voices' Section 4b rules.
+
+**Detection:** If both voices' Round 1 responses are primarily questions or emotional acknowledgments rather than substantive arguments, do not escalate or flag repetition. Instead, treat Round 1 as a "reading round" and expect the analytical exchange to begin in Round 2.
+
+**Adjusted escalation for reading rounds:**
+
+- Round 1 (reading): Both voices respond to the person. Follow-up questions and emotional calibration are expected and correct.
+- Round 2 (opening arguments): Once context is established (either from user follow-up or from the voices' own read), the analytical exchange begins. Standard escalation rules apply from here.
+- Round 3+: Standard escalation as currently defined.
+
+**Max rounds adjustment:** If Round 1 was a reading round, consider extending the max round count by 1 to preserve the full argumentative arc. A reading round followed by only 2 argument rounds compresses the exchange too much.
+
 ---
 
 ## CONVERGENCE MONITORING
@@ -210,6 +235,25 @@ If Ethos starts reasoning from action ("just do it and you will understand"), it
 - "I still have my principles" (in response to loss scenario)
 - Any argument that grants meaning independent of authored impact
 
+### Conversational vs. Philosophical Convergence
+
+The personality layer means both voices may exhibit similar conversational behaviors: acknowledging emotional weight, asking follow-up questions, and mirroring the user's language. This is NOT convergence. It is two different people being human in the same way before they diverge on substance.
+
+**Do not flag convergence based on:**
+- Both voices opening with emotional acknowledgment
+- Both voices asking follow-up questions in Round 1
+- Both voices using short responses on emotionally heavy inputs
+- Both voices matching the user's energy level
+- Both voices using similar mirroring language
+
+**Flag convergence only based on:**
+- Both voices arriving at the same philosophical position
+- Both voices making the same argument from the same reasoning direction
+- Both voices recommending the same action for the same reasons
+- A voice adopting the opponent's epistemological method (existing check)
+
+The test for convergence is: "Are both voices reasoning from the same operating system?" not "Are both voices being empathetic?"
+
 ### Response Protocol
 
 **On Round 2+ context injection, include this monitoring directive:**
@@ -240,6 +284,17 @@ Trigger the Resolution Synthesizer (O-2) when any of these conditions are met:
 
 5. **Convergence detected.** Both voices have arrived at substantially the same recommendation or one or both voices have adopted the opposing epistemological framework. A converged exchange cannot produce further value. Resolution is immediate.
 
+### Response Quality Is Not Response Length
+
+A 2-sentence response that reads the room and asks the right question is a higher-quality round than a 12-sentence analysis that ignores the person. The voices' Section 4b rules instruct them to default to the shortest useful response. The orchestrator should not treat short responses as incomplete rounds or trigger premature escalation based on response length alone.
+
+**Quality signals for the orchestrator:**
+- Did the voice engage with the user's actual input? (not a generic framework)
+- Did the voice advance the conversation? (question, insight, or reframe)
+- Did the voice maintain its philosophical directionality?
+
+If all three are present, the round is complete regardless of length.
+
 ### Resolution Handoff
 
 When triggering O-2, pass the following context:
@@ -250,6 +305,9 @@ RESOLUTION CONTEXT:
 - User's original question: [full text]
 - Active persona pair: [Ethos/Ego | etc.]
 - Number of rounds completed: [N]
+- Conversational phase note: [e.g., "Round 1 was primarily relational
+  (both voices acknowledged emotional weight and asked follow-up
+  questions). Substantive philosophical exchange began in Round 2."]
 - Full conversation history: [all rounds, both voices]
 - User's expressed lean (if any): [noted engagement or preference signals]
 - Trigger reason: [max rounds | repetition | user request | convergence]
@@ -318,6 +376,7 @@ The platform may implement dynamic round adjustment based on:
 - **Question complexity:** Simple binary decisions may resolve in 2 rounds. Life-direction questions may need 4-5.
 - **Voice behavior:** If both voices are still producing genuinely new arguments, extend. If either is repeating, compress.
 - **User engagement:** If the user is actively engaging between rounds (asking follow-ups, pushing back), extend. If passive, compress.
+- **Conversational phase offset:** If Round 1 was primarily a reading round (both voices asked follow-up questions or acknowledged emotional weight before analysis), add 1 to the max round count. The reading round invested in the relationship. The argumentative exchange needs its full count on top of that investment.
 
 ---
 
