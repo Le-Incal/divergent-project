@@ -23,25 +23,6 @@ function stripNoise(text) {
     .trim()
 }
 
-/**
- * Browser SpeechSynthesis fallback when ElevenLabs is not configured.
- */
-function speakBrowser(text) {
-  return new Promise((resolve) => {
-    const synth = typeof window !== 'undefined' && window.speechSynthesis
-    if (!synth) {
-      resolve()
-      return
-    }
-    const utterance = new SpeechSynthesisUtterance(text)
-    utterance.rate = 1.0
-    utterance.pitch = 1.0
-    utterance.onend = resolve
-    utterance.onerror = resolve
-    synth.speak(utterance)
-  })
-}
-
 export default function VoiceFlowController({ active }) {
   const { state, dispatch, getVoiceASpeakerVoiceId } = useApp()
   const { sendMessage } = useChat()
@@ -75,19 +56,15 @@ export default function VoiceFlowController({ active }) {
     [dispatch],
   )
 
-  // Speak via ElevenLabs TTS if configured, otherwise browser SpeechSynthesis
+  // Speak via ElevenLabs TTS (no browser fallback)
   const speakHost = useCallback(
     async (text) => {
       addHostMessage(text)
-      if (hostVoiceId) {
-        try {
-          await playTTS(text, hostVoiceId)
-          return
-        } catch {
-          // ElevenLabs failed — try browser fallback
-        }
+      if (!hostVoiceId) {
+        console.warn('No ElevenLabs voice configured — skipping TTS')
+        return
       }
-      await speakBrowser(text)
+      await playTTS(text, hostVoiceId)
     },
     [addHostMessage, hostVoiceId],
   )

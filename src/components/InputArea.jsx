@@ -2,20 +2,14 @@ import { useEffect, useRef, useState } from 'react'
 import { useApp } from '../context/AppContext'
 import { useChat } from '../hooks/useChat'
 
-// Browser fallback when ElevenLabs STT is not configured
-const SpeechRecognition = typeof window !== 'undefined' && (window.SpeechRecognition || window.webkitSpeechRecognition)
-
 export default function InputArea({ replyContext = null, onClearReply }) {
   const { state } = useApp()
   const { sendMessage } = useChat()
   const [localInput, setLocalInput] = useState('')
   const [isListening, setIsListening] = useState(false)
-  const [interimTranscript, setInterimTranscript] = useState('')
   const [transcribing, setTranscribing] = useState(false)
   const [sttError, setSttError] = useState(false)
-  const [useBrowserSTT, setUseBrowserSTT] = useState(false)
   const inputRef = useRef(null)
-  const recognitionRef = useRef(null)
   const mediaRecorderRef = useRef(null)
   const chunksRef = useRef([])
   const streamRef = useRef(null)
@@ -71,7 +65,6 @@ export default function InputArea({ replyContext = null, onClearReply }) {
             body: blob,
           })
           if (res.status === 503) {
-            if (SpeechRecognition) setUseBrowserSTT(true)
             setSttError(true)
             resolve()
             return
@@ -113,55 +106,16 @@ export default function InputArea({ replyContext = null, onClearReply }) {
     }
   }
 
-  // Browser Speech Recognition fallback when ElevenLabs STT returns 503
-  useEffect(() => {
-    if (!SpeechRecognition || recognitionRef.current) return
-    const recognition = new SpeechRecognition()
-    recognition.continuous = true
-    recognition.interimResults = true
-    recognition.lang = 'en-US'
-    recognition.onresult = (event) => {
-      let interim = ''
-      let final = ''
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        const transcript = event.results[i][0].transcript
-        if (event.results[i].isFinal) final += transcript
-        else interim += transcript
-      }
-      if (final) {
-        setLocalInput((prev) => (prev ? `${prev} ${final}` : final).trim())
-        setInterimTranscript('')
-      } else {
-        setInterimTranscript(interim)
-      }
-    }
-    recognition.onend = () => setIsListening(false)
-    recognition.onerror = () => setIsListening(false)
-    recognitionRef.current = recognition
-    return () => {
-      try { recognitionRef.current?.abort() } catch {}
-      recognitionRef.current = null
-    }
-  }, [])
-
   const toggleListening = async () => {
     if (state.isLoading) return
     if (isListening) {
       await stopRecordingAndTranscribe()
       return
     }
-    if (useBrowserSTT && recognitionRef.current) {
-      setSttError(false)
-      setInterimTranscript('')
-      recognitionRef.current.start()
-      setIsListening(true)
-      return
-    }
     await startRecording()
   }
 
   const minHeight = 96
-  const displayValue = localInput + (interimTranscript ? ` ${interimTranscript}` : '')
 
   useEffect(() => {
     const el = inputRef.current
@@ -174,7 +128,7 @@ export default function InputArea({ replyContext = null, onClearReply }) {
     const paddingTop = Math.max(10, (currentHeight - lineHeight) / 2)
     el.style.paddingTop = `${paddingTop}px`
     el.style.textAlign = 'center'
-  }, [localInput, interimTranscript])
+  }, [localInput])
 
   const voiceFlowActive = state.voiceFlowStage && state.voiceFlowStage !== 'idle'
 
@@ -217,8 +171,8 @@ export default function InputArea({ replyContext = null, onClearReply }) {
         </div>
       )}
 
-      {sttError && !isListening && !transcribing && !useBrowserSTT && (
-        <p className="inputSttHint">Add ELEVENLABS_API_KEY for voice transcription. Next mic click will use browser speech.</p>
+      {sttError && !isListening && !transcribing && (
+        <p className="inputSttHint">ElevenLabs transcription unavailable. Check ELEVENLABS_API_KEY is set.</p>
       )}
 
       <form onSubmit={handleSubmit} className="inputAreaForm">
@@ -230,7 +184,7 @@ export default function InputArea({ replyContext = null, onClearReply }) {
             ref={inputRef}
             id="divergent-input"
             className="input inputAreaField"
-            value={isListening && interimTranscript ? displayValue : localInput}
+            value={localInput}
             onChange={(e) => setLocalInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={transcribing ? 'Transcribing…' : isListening ? 'Recording…' : placeholder}
