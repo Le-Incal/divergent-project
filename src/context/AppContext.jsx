@@ -234,6 +234,8 @@ const initialState = {
   clarificationRound: 0,
   chatHistories: [],
   activeChatId: null,
+  // Voice flow (welcome → listen → confirm → Ethos/Ego)
+  voiceFlowStage: 'idle', // 'idle' | 'greeting' | 'listening' | 'transcribing' | 'confirming' | 'processing'
   // Phase 3: Exchange-level state (O-1 round management)
   exchangeStatus: 'pending', // 'pending' | 'active' | 'resolved' | 'archived'
   exchangeRound: 0,
@@ -316,6 +318,13 @@ const reducer = (state, action) => {
       const next = state.messages.map(m => m.id === id ? { ...m, isStreaming } : m)
       return { ...state, messages: next }
     }
+    case 'SET_VOICE_FLOW_STAGE':
+      return { ...state, voiceFlowStage: action.payload }
+    case 'REMOVE_MESSAGE': {
+      const rmId = action.payload
+      const nextMsgs = state.messages.filter((m) => m.id !== rmId)
+      return applyActiveChatPatch({ ...state, messages: nextMsgs }, { messages: nextMsgs })
+    }
     case 'SET_CHAT_PHASE':
       return { ...state, chatPhase: action.payload }
     case 'SET_CLARIFICATION_ROUND':
@@ -360,6 +369,7 @@ const reducer = (state, action) => {
         selectedBranch: null,
         resolutionText: null,
         activeChatId: null,
+        voiceFlowStage: 'idle',
         exchangeStatus: 'pending',
         exchangeRound: 0,
         exchangeHistory: [],

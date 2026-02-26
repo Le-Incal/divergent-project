@@ -21,6 +21,14 @@ function TypingIndicator() {
   )
 }
 
+function HostMessage({ message }) {
+  return (
+    <div className="chatHostMsg">
+      <p className="chatHostText">{message.text}</p>
+    </div>
+  )
+}
+
 function UserMessage({ message }) {
   return (
     <div className="chatUserMsg">
@@ -240,6 +248,9 @@ export default function ChatThread({ onReply }) {
         }
 
         const msg = group.message
+        if (msg.type === 'host') {
+          return <HostMessage key={msg.id} message={msg} />
+        }
         if (msg.type === 'user') {
           return <UserMessage key={msg.id} message={msg} />
         }

@@ -92,14 +92,16 @@ export function useChat() {
       const history = [
         ...state.messages,
         { type: 'user', text: trimmed, replyTo: replyContext },
-      ].map((m) => {
-        if (m.type === 'user') {
-          const prefix = m.replyTo ? `[Responding to: "${String(m.replyTo).slice(0, 80)}"]\n` : ''
-          return `User: ${prefix}${m.text}`
-        }
-        const name = m.type === 'ethos' ? voiceAName : voiceBName
-        return `${name}: ${m.text}`
-      })
+      ]
+        .filter((m) => m.type !== 'host') // exclude host/system messages from AI prompt
+        .map((m) => {
+          if (m.type === 'user') {
+            const prefix = m.replyTo ? `[Responding to: "${String(m.replyTo).slice(0, 80)}"]\n` : ''
+            return `User: ${prefix}${m.text}`
+          }
+          const name = m.type === 'ethos' ? voiceAName : voiceBName
+          return `${name}: ${m.text}`
+        })
       return `${history.join('\n\n')}\n\n${instruction}`
     }
 
