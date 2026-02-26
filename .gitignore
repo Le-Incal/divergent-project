@@ -4,3 +4,14 @@ dist/
 .env.local
 .DS_Store
 *.log
+
+# Sensitive design documents (Layer 1 naming - contains real names)
+CR-1-codename-registry.md
+*-doctrine-profiles-complete.md
+*-persona-consolidated.md
+*-character-bible.md
+divergentdoctrinelibraries.xlsx
+divergent-ego-upgrade-todo.md
+divergent-prompt-inventory-v1.md
+divergent-prompt-compiler.md
+divergent-prompt-writing-rules.md
