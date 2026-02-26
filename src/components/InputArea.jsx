@@ -176,8 +176,17 @@ export default function InputArea({ replyContext = null, onClearReply }) {
     el.style.textAlign = 'center'
   }, [localInput, interimTranscript])
 
-  const placeholder =
-    state.chatPhase === 'advising'
+  const voiceFlowActive = state.voiceFlowStage && state.voiceFlowStage !== 'idle'
+
+  const placeholder = voiceFlowActive
+    ? state.voiceFlowStage === 'listening'
+      ? 'Listening…'
+      : state.voiceFlowStage === 'transcribing'
+      ? 'Transcribing…'
+      : state.voiceFlowStage === 'confirming'
+      ? 'Waiting for confirmation…'
+      : 'Voice flow active…'
+    : state.chatPhase === 'advising'
       ? 'Continue the conversation... press Enter when ready.'
       : 'Explore a new idea.... press Enter or say Go when ready.'
 
@@ -187,7 +196,7 @@ export default function InputArea({ replyContext = null, onClearReply }) {
     ? 'Stop (recording)'
     : 'Speak (voice input)'
 
-  const showMic = true
+  const showMic = !voiceFlowActive
 
   return (
     <div className="inputArea">

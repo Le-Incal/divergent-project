@@ -5,6 +5,7 @@ import ChatThread from './components/ChatThread'
 import InputArea from './components/InputArea'
 import LandingPage from './components/LandingPage'
 import SidePanel from './components/SidePanel'
+import VoiceFlowController from './components/VoiceFlowController'
 
 function App() {
   const { state, dispatch, setMode } = useApp()
@@ -57,6 +58,8 @@ function App() {
         onClose={() => setPanelOpen(false)}
         onNewChat={restartToLanding}
       />
+
+      <VoiceFlowController active={hasEntered && state.chatPhase === 'idle'} />
 
       <main className="appMain">
         <div className="appSection">
