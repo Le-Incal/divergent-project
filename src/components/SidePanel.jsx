@@ -208,28 +208,35 @@ export default function SidePanel({ open, onClose, onNewChat }) {
 
               <div className="panelSection">
                 <div className="panelSectionLabel">Speakers (TTS)</div>
-                <div className="panelFormGrid">
-                  <div className="panelField">
-                    <label className="panelFieldLabel">{voiceALabel}</label>
-                    <select className="panelSelect" value={state.voiceAVoiceId} onChange={(e) => setVoiceAVoice(e.target.value)}>
-                      {VOICES.map((v) => (
-                        <option key={v.id} value={v.id}>
-                          {v.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="panelField">
-                    <label className="panelFieldLabel">{voiceBLabel}</label>
-                    <select className="panelSelect" value={state.voiceBVoiceId} onChange={(e) => setVoiceBVoice(e.target.value)}>
-                      {VOICES.map((v) => (
-                        <option key={v.id} value={v.id}>
-                          {v.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
+                {(() => {
+                  const voiceOptions = state.availableVoices?.length
+                    ? state.availableVoices.map((v) => ({ key: v.voiceId, value: v.voiceId, label: v.name }))
+                    : VOICES.map((v) => ({ key: v.id, value: v.id, label: v.name }))
+                  return (
+                    <div className="panelFormGrid">
+                      <div className="panelField">
+                        <label className="panelFieldLabel">{voiceALabel}</label>
+                        <select className="panelSelect" value={state.voiceAVoiceId} onChange={(e) => setVoiceAVoice(e.target.value)}>
+                          {voiceOptions.map((v) => (
+                            <option key={v.key} value={v.value}>
+                              {v.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="panelField">
+                        <label className="panelFieldLabel">{voiceBLabel}</label>
+                        <select className="panelSelect" value={state.voiceBVoiceId} onChange={(e) => setVoiceBVoice(e.target.value)}>
+                          {voiceOptions.map((v) => (
+                            <option key={v.key} value={v.value}>
+                              {v.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  )
+                })()}
               </div>
 
               <div className="panelSection">

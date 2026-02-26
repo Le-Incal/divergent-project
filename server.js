@@ -420,6 +420,37 @@ ${conversationHistory.map((m) => `${m.name || m.speaker}: ${m.text}`).join('\n')
   }
 });
 
+// ElevenLabs voice discovery: list available voices so the frontend can auto-configure
+app.get('/api/voices', async (req, res) => {
+  try {
+    const apiKey = process.env.ELEVENLABS_API_KEY;
+    if (!apiKey) {
+      return res.status(503).json({ error: 'ELEVENLABS_API_KEY not configured', voices: [] });
+    }
+    const response = await fetch('https://api.elevenlabs.io/v1/voices', {
+      headers: { 'xi-api-key': apiKey },
+    });
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error('ElevenLabs voices error:', response.status, errText);
+      return res.status(response.status).json({ error: 'Failed to fetch voices', voices: [] });
+    }
+    const data = await response.json();
+    const voices = (data.voices || []).map((v) => ({
+      voiceId: v.voice_id,
+      name: v.name,
+      gender: v.labels?.gender || null,
+      accent: v.labels?.accent || null,
+      age: v.labels?.age || null,
+      category: v.category || null,
+    }));
+    res.json({ voices });
+  } catch (error) {
+    console.error('Voices handler error:', error);
+    res.status(500).json({ error: 'Internal server error', voices: [] });
+  }
+});
+
 // ElevenLabs TTS proxy (keeps API key server-side)
 app.post('/api/tts', async (req, res) => {
   try {
