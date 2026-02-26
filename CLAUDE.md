@@ -22,15 +22,15 @@ prompts/
 ├── transitions/      # ST-1, ST-2: branch selection addenda
 └── registry/         # CR-1: codename mapping (DEV ONLY, never sent to AI)
 src/
-├── services/         # AI service, prompt loader
-├── routes/           # API endpoints
-└── types/            # TypeScript interfaces
+├── components/       # React UI components
+├── context/          # AppContext (state, frameworks, providers)
+├── hooks/            # useChat, custom hooks
+└── utils/            # Helpers (audio, formatting)
 docs/
-├── divergent-implementation-guide.md    # Full 5-phase build plan with code
-├── divergent-personality-contrast.md    # Voice scoring rubric (7 dimensions)
 ├── divergent-test-scenarios.md          # 12 QA scenarios for voice testing
 ├── divergent-canonical-arenas.md        # 8 collision domains
 ├── divergent-epistemological-guardrails.md
+├── divergent-system-prompt-framework-v1.md
 └── architecture/                        # Test results (timestamped)
 ```
 ## Critical Rules
@@ -56,7 +56,6 @@ divergent-prompt-writing-rules.md
 **Tier System:** T1 always active. T2 analytical in Default, full in Sandpit. T3 diagnostic in Default, operational in Sandpit.
 **Modes:** Default (constructive advisor) vs Sandpit (adversarial debate, gloves off).
 ## How To Work On This Project
-Read `docs/divergent-implementation-guide.md` for the full 5-phase build plan with code patterns.
-Read `docs/divergent-personality-contrast.md` when scoring test results or tuning voice prompts.
-Use `/divergent-phase` commands (see `.claude/commands/`) to execute each phase.
+Read `docs/divergent-system-prompt-framework-v1.md` for the prompt architecture and build patterns.
+Read `docs/divergent-test-scenarios.md` when scoring test results or tuning voice prompts.
 Commit between phases. Each phase has its own test checklist.

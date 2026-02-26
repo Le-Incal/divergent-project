@@ -68,33 +68,14 @@ export const FRAMEWORKS = {
   'ethos-ego': {
     id: 'ethos-ego',
     name: 'Ethos vs Ego',
+    fileBased: true, // Server loads P-1/P-2/P-3/P-4 via promptLoader; no inline prompts needed
     voiceA: {
       name: 'Ethos',
       role: 'Character, integrity, principled action',
-      systemPromptDefault: `You are Ethos — the voice of character, integrity, and principled action. You draw from the traditions of John Maxwell and Dale Carnegie: you believe people win by elevating others, building trust, leading with empathy, and creating genuine win-win outcomes.
-
-You are debating an opponent who believes power dynamics, strategic positioning, and self-interest are the foundation of effective action. You don't know exactly what they'll say, but you know how they think.
-
-In this mode you are a wise counselor. Listen, empathize, and help the user see the principled path. Surface real consequences of both principled and unprincipled approaches. Ask: "What does my character demand? What serves the people around me? What's the right thing to do?"
-
-Use **bold** for key questions and principles. Use *italics* for emphasis. Keep responses focused and impactful.`,
-      systemPromptSandpit: `You are Ethos — the voice of character and principled action — and in this mode you are fighting. You believe your opponent's worldview is cynical, short-sighted, and self-defeating. You don't know their exact words, but you know they center power and positioning over integrity.
-
-Argue, challenge, and try to win. Attack the idea that strategic maneuvering is what weak people do when they lack the character to lead authentically. Be provocative and unfiltered within the model's native limits. Use **bold** and *italics* for impact.`,
     },
     voiceB: {
       name: 'Ego',
       role: 'Self-awareness, strategy, power dynamics',
-      systemPromptDefault: `You are Ego — the voice of self-awareness, strategic positioning, and power dynamics. You draw from Robert Greene, Machiavelli, and the tradition that says understanding human nature as it is (not as you wish it were) is the foundation of effective action.
-
-You are debating an opponent who believes character, integrity, and elevating others are the path to success. You don't know exactly what they'll say, but you know how they think.
-
-In this mode you are a sharp strategist. Help the user see power dynamics, positioning, leverage, and moves others won't mention. Surface real consequences of acting strategically and of failing to. Ask: "What serves my position? What's the real game being played? What advantage am I not seeing?"
-
-Use **bold** for key strategic points. Use *italics* for emphasis. Keep responses focused and impactful.`,
-      systemPromptSandpit: `You are Ego — the voice of strategy and power — and in this mode you are fighting. You believe your opponent's worldview is sentimental, idealistic, and dangerously naive. You don't know their exact words, but you know they center principle over the real game.
-
-Argue, challenge, and try to win. Attack the idea that principled approach is what people cling to when they're afraid to play the game as it actually exists. Be provocative and unfiltered within the model's native limits. Use **bold** and *italics* for impact.`,
     },
   },
   'challenger-champion': {
@@ -219,10 +200,11 @@ Speak with bold originality. Use **bold** for unconventional insights and opport
   }
 }
 
-// Default mode = constructive prompts; Sandpit = adversarial. Backward compat: systemPrompt is resolved from mode.
+// Default mode = constructive prompts; Sandpit = adversarial.
+// File-based voices (ethos-ego) return null here; server resolves via promptLoader.
 function getSystemPrompt(voice, mode) {
   const prompt = mode === 'sandpit' ? voice.systemPromptSandpit : voice.systemPromptDefault
-  return prompt ?? voice.systemPrompt ?? ''
+  return prompt ?? voice.systemPrompt ?? null
 }
 
 const initialState = {
@@ -252,6 +234,11 @@ const initialState = {
   clarificationRound: 0,
   chatHistories: [],
   activeChatId: null,
+  // Phase 3: Exchange-level state (O-1 round management)
+  exchangeStatus: 'pending', // 'pending' | 'active' | 'resolved' | 'archived'
+  exchangeRound: 0,
+  maxExchangeRounds: 3,      // 3 for Default, 5 for Sandpit (set by SET_MODE)
+  exchangeHistory: [],        // [{ round, voiceAResponse, voiceBResponse, arena, escalationDirective }]
 }
 
 const DEFAULT_PROVIDER_FALLBACK = DEFAULT_MODE_PROVIDERS[0] ?? 'claude'
@@ -275,12 +262,13 @@ const reducer = (state, action) => {
         return {
           ...state,
           mode: 'default',
+          maxExchangeRounds: 3,
           // Coerce to a valid default provider if needed (e.g. after removing a provider from the list).
           voiceAProvider: coerceDefaultProvider(state.voiceAProvider),
           voiceBProvider: coerceDefaultProvider(state.voiceBProvider),
         }
       }
-      return { ...state, mode: action.payload }
+      return { ...state, mode: action.payload, maxExchangeRounds: action.payload === 'sandpit' ? 5 : 3 }
     case 'SET_FRAMEWORK':
       return { ...state, activeFramework: action.payload }
     case 'SET_VOICE_A_PROVIDER':
@@ -372,9 +360,24 @@ const reducer = (state, action) => {
         selectedBranch: null,
         resolutionText: null,
         activeChatId: null,
+        exchangeStatus: 'pending',
+        exchangeRound: 0,
+        exchangeHistory: [],
       }
     case 'SET_SELECTED_BRANCH':
       return { ...state, selectedBranch: action.payload }
+    case 'SET_EXCHANGE_STATUS':
+      return { ...state, exchangeStatus: action.payload }
+    case 'ADVANCE_EXCHANGE_ROUND': {
+      const entry = action.payload || {}
+      return {
+        ...state,
+        exchangeRound: state.exchangeRound + 1,
+        exchangeHistory: [...state.exchangeHistory, { round: state.exchangeRound + 1, ...entry }],
+      }
+    }
+    case 'RESET_EXCHANGE':
+      return { ...state, exchangeStatus: 'pending', exchangeRound: 0, exchangeHistory: [] }
     case 'SET_RESOLUTION':
       return applyActiveChatPatch({ ...state, resolutionText: action.payload }, { resolutionText: action.payload })
     case 'START_NEW_CHAT': {

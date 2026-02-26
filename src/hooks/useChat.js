@@ -127,7 +127,8 @@ export function useChat() {
         await streamSseToText({
           endpoint: provider.endpoint,
           body: isEthosEgo
-            ? { message: prompt, voice: voiceType, mode: state.mode, voiceName: voice.name }
+            ? { message: prompt, voice: voiceType, mode: state.mode, voiceName: voice.name,
+                ...(state.selectedBranch ? { appendTransition: state.selectedBranch } : {}) }
             : { message: prompt, systemPrompt: voice.systemPrompt, voiceName: voice.name },
           onTextDelta: (fullText) =>
             dispatch({ type: 'UPDATE_MESSAGE_TEXT', payload: { id: msgId, text: fullText } }),
@@ -167,7 +168,7 @@ export function useChat() {
     } finally {
       dispatch({ type: 'STOP_LOADING' })
     }
-  }, [dispatch, getActiveFramework, getVoiceAProvider, getVoiceBProvider, state.chatPhase, state.clarificationRound, state.messages, state.mode, state.isLoading])
+  }, [dispatch, getActiveFramework, getVoiceAProvider, getVoiceBProvider, state.chatPhase, state.clarificationRound, state.messages, state.mode, state.isLoading, state.selectedBranch])
 
   // Legacy: kept for side panel resolution feature
   const fetchResolution = useCallback(async (triggerReason = 'user request') => {

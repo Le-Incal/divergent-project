@@ -1,5 +1,5 @@
 # Prompts Directory
-These are runtime files injected into AI API calls. Every file here is loaded by `src/services/promptLoader.ts`.
+These are runtime files injected into AI API calls. Every file here is loaded by `promptLoader.js` (project root).
 ## Voice Prompts (P-1 to P-4)
 Each follows a 7-section structure: Win Imperative, Persona Identity, Worldview Payload, Doctrine Engine, Voice Constraints, Opposition Awareness, Mode Directives.
 - `P-1-ethos-default.md` - Ethos in Default Mode (constructive advisor)
