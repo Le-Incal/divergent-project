@@ -5,7 +5,7 @@
  */
 export function createSilenceDetector(stream, onSilence, options = {}) {
   const {
-    threshold = 0.015,
+    threshold = 0.035,
     silenceDuration = 2000,
     minSpeechDuration = 500,
   } = options
