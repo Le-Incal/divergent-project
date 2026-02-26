@@ -47,6 +47,17 @@ Detection signals:
 - Request for specifics: "Walk me through the first step"
 - Pushback on chosen voice: "But what about [concern]?"
 
+**Answering a voice's question.** The user is responding to a follow-up question asked by one or both voices. This is not a new exchange prompt. It is context enrichment. Route the user's answer back to the voice(s) that asked the question, appended to the conversation history, and let the voice(s) produce their analytical response with the enriched context.
+
+Detection signals:
+- User's message directly answers a question asked in the previous round
+- User provides new information that was requested by a voice
+- User's message is short and responsive rather than initiating
+
+Routing behavior:
+- If one voice asked a question and the other gave analysis, route the user's answer to the questioning voice. The analyzing voice does not need an update.
+- If both voices asked questions, route the user's answer to both. Both voices should now produce their analytical responses with the enriched context. This counts as the start of the substantive exchange, not as a new reading round.
+
 ### Ambiguous Cases
 
 When the classification is unclear, default to routing to both voices for a new exchange round. It is better to give the user two perspectives on an ambiguous follow-up than to guess wrong about which voice they wanted. Include a brief UI prompt: "Both perspectives are weighing in on your follow-up."
@@ -133,8 +144,13 @@ When the user toggles between Default and Sandpit mid-conversation:
 MODE TRANSITION CONTEXT:
 - Previous mode: [Default | Sandpit]
 - New mode: [Sandpit | Default]
-- Conversation history: [full history from previous mode]
-- Instruction: Your philosophical core is unchanged. Your energy, intensity, and behavioral constraints now match [new mode]. Continue from the current point in the conversation. The arguments already made still stand. Shift your register, not your position.
+- Conversation history: [all rounds so far]
+- Instruction: The conversation mode has changed. Your personality is
+  identical: same humor, same metaphors, same attention patterns, same
+  conversational behavior. Your energy and conviction shift to match
+  the new mode. In Default, you are the advisor. In Sandpit, you are
+  the fighter. Same person, different gear. Continue from where the
+  conversation left off. Do not acknowledge the mode switch.
 ```
 
 4. **Do not reset round counter.** If the exchange was on Round 2 in Default and switches to Sandpit, it continues from Round 2 in Sandpit. The conversation does not restart.
