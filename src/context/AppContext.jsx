@@ -215,6 +215,7 @@ const initialState = {
   voiceBProvider: 'claude',
   voiceAVoiceId: VOICES[0]?.id ?? 'male-1',
   voiceBVoiceId: VOICES[1]?.id ?? 'female-1',
+  availableVoices: [], // populated from /api/voices on mount
   debateOverlap: 50,
   userInput: '',
   isLoading: false,
@@ -281,6 +282,27 @@ const reducer = (state, action) => {
       return { ...state, voiceAVoiceId: action.payload }
     case 'SET_VOICE_B_VOICE':
       return { ...state, voiceBVoiceId: action.payload }
+    case 'SET_AVAILABLE_VOICES': {
+      const voices = action.payload || []
+      const updates = { availableVoices: voices }
+      if (voices.length > 0) {
+        // Auto-assign if current IDs point to placeholder entries
+        const curA = VOICES.find((v) => v.id === state.voiceAVoiceId)
+        const curB = VOICES.find((v) => v.id === state.voiceBVoiceId)
+        const needsA = !curA || curA.voiceId.startsWith('REPLACE_')
+        const needsB = !curB || curB.voiceId.startsWith('REPLACE_')
+        if (needsA) {
+          const male = voices.find((v) => v.gender === 'male')
+          updates.voiceAVoiceId = (male || voices[0]).voiceId
+        }
+        if (needsB) {
+          const aId = updates.voiceAVoiceId || state.voiceAVoiceId
+          const female = voices.find((v) => v.gender === 'female' && v.voiceId !== aId)
+          updates.voiceBVoiceId = (female || voices[1] || voices[0]).voiceId
+        }
+      }
+      return { ...state, ...updates }
+    }
     case 'SET_DEBATE_OVERLAP':
       return { ...state, debateOverlap: Math.min(100, Math.max(0, Number(action.payload))) }
     case 'SET_USER_INPUT':
@@ -498,6 +520,18 @@ export function AppProvider({ children }) {
       // ignore
     }
   }, [state.chatHistories])
+
+  // Fetch available ElevenLabs voices on mount; auto-assigns if current IDs are placeholders
+  useEffect(() => {
+    fetch('/api/voices')
+      .then((res) => (res.ok ? res.json() : { voices: [] }))
+      .then((data) => {
+        if (data.voices?.length) {
+          dispatch({ type: 'SET_AVAILABLE_VOICES', payload: data.voices })
+        }
+      })
+      .catch(() => {})
+  }, [])
   
   const getActiveFramework = () => {
     const fw = FRAMEWORKS[state.activeFramework]
@@ -517,6 +551,9 @@ export function AppProvider({ children }) {
 
   const getSpeakerVoiceId = (voiceKey) => {
     const id = voiceKey === 'A' ? state.voiceAVoiceId : state.voiceBVoiceId
+    // Check if it's a direct ElevenLabs voice ID (from auto-discovery)
+    if (state.availableVoices?.some((v) => v.voiceId === id)) return id
+    // Legacy: check static VOICES array
     const voice = VOICES.find((v) => v.id === id)
     const voiceId = voice?.voiceId ?? null
     if (!voiceId || voiceId.startsWith('REPLACE_')) return null
