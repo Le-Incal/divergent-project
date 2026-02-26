@@ -8,8 +8,39 @@ const WELCOME_TEXT = "Welcome to Divergent. What's on your mind?"
 const ACK_TEXT = "Got it. Is that everything, or would you like to add anything else?"
 const RETRY_TEXT = "I didn't catch that. Could you try again?"
 
-const CONFIRM_RE =
-  /^(yes|yeah|yep|yup|go|go ahead|start|begin|that'?s?\s*(it|all|everything)|done|i'?m\s*done|nothing\s*(else|more)|no\s*more|ready|proceed|let'?s?\s*go|correct|exactly|confirmed|absolutely|sure)[\s.,!?]*$/i
+const CONFIRM_WORDS =
+  /\b(yes|yeah|yep|yup|go\s*ahead|start|begin|that'?s?\s*(it|all|everything)|done|i'?m\s*done|nothing\s*(else|more)|no\s*more|ready|proceed|let'?s?\s*go|correct|exactly|confirmed|absolutely|sure)\b/i
+
+/**
+ * Strip ElevenLabs Scribe noise annotations: [background noise], [clicking], etc.
+ * Returns cleaned text or '' if nothing meaningful remains.
+ */
+function stripNoise(text) {
+  if (!text) return ''
+  return text
+    .replace(/\[[^\]]*\]/g, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim()
+}
+
+/**
+ * Browser SpeechSynthesis fallback when ElevenLabs is not configured.
+ */
+function speakBrowser(text) {
+  return new Promise((resolve) => {
+    const synth = typeof window !== 'undefined' && window.speechSynthesis
+    if (!synth) {
+      resolve()
+      return
+    }
+    const utterance = new SpeechSynthesisUtterance(text)
+    utterance.rate = 1.0
+    utterance.pitch = 1.0
+    utterance.onend = resolve
+    utterance.onerror = resolve
+    synth.speak(utterance)
+  })
+}
 
 export default function VoiceFlowController({ active }) {
   const { state, dispatch, getVoiceASpeakerVoiceId } = useApp()
@@ -44,6 +75,7 @@ export default function VoiceFlowController({ active }) {
     [dispatch],
   )
 
+  // Speak via ElevenLabs TTS if configured, otherwise browser SpeechSynthesis
   const speakHost = useCallback(
     async (text) => {
       addHostMessage(text)
@@ -52,16 +84,16 @@ export default function VoiceFlowController({ active }) {
           await playTTS(text, hostVoiceId)
           return
         } catch {
-          // TTS unavailable — fall through to delay
+          // ElevenLabs failed — try browser fallback
         }
       }
-      // Let user read the text when TTS is unavailable
-      await new Promise((r) => setTimeout(r, 2000))
+      await speakBrowser(text)
     },
     [addHostMessage, hostVoiceId],
   )
 
-  // Record audio until silence, then transcribe via /api/stt. Returns text or ''.
+  // Record audio until silence, then transcribe via /api/stt.
+  // Returns cleaned text (noise annotations stripped) or ''.
   const recordUntilSilence = useCallback(() => {
     return new Promise((resolve) => {
       let stream, mr, detector
@@ -107,7 +139,7 @@ export default function VoiceFlowController({ active }) {
                 return
               }
               const data = await res.json()
-              resolve((data.text || '').trim())
+              resolve(stripNoise(data.text || ''))
             } catch {
               resolve('')
             }
@@ -121,11 +153,10 @@ export default function VoiceFlowController({ active }) {
             () => {
               if (mr && mr.state !== 'inactive') mr.stop()
             },
-            { threshold: 0.015, silenceDuration: 2000, minSpeechDuration: 500 },
+            { threshold: 0.035, silenceDuration: 2000, minSpeechDuration: 500 },
           )
         })
         .catch(() => {
-          // Mic denied
           resolve('')
         })
     })
@@ -155,7 +186,6 @@ export default function VoiceFlowController({ active }) {
         if (!spoken) {
           emptyAttempts++
           if (emptyAttempts >= MAX_EMPTY) {
-            // Give up on voice, let user type manually
             setStage('idle')
             return
           }
@@ -200,7 +230,8 @@ export default function VoiceFlowController({ active }) {
 
         if (!response) continue
 
-        if (CONFIRM_RE.test(response.trim())) {
+        // Check if the response contains confirmation words
+        if (CONFIRM_WORDS.test(response)) {
           break // Confirmed — proceed to Ethos/Ego
         }
 
