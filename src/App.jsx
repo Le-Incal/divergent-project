@@ -1,14 +1,15 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useApp } from './context/AppContext'
 import Header from './components/Header'
 import ChatThread from './components/ChatThread'
 import InputArea from './components/InputArea'
 import LandingPage from './components/LandingPage'
 import SidePanel from './components/SidePanel'
-import VoiceFlowController from './components/VoiceFlowController'
+import VoiceFlowController, { WELCOME_TEXT } from './components/VoiceFlowController'
+import { prefetchTTS } from './utils/tts'
 
 function App() {
-  const { state, dispatch, setMode } = useApp()
+  const { state, dispatch, setMode, getVoiceASpeakerVoiceId } = useApp()
   const [panelOpen, setPanelOpen] = useState(false)
   const [replyContext, setReplyContext] = useState(null)
 
@@ -41,6 +42,15 @@ function App() {
     }
     setHasEntered(false)
   }
+
+  // Pre-fetch the welcome greeting audio while the user is on the landing page
+  // so it plays instantly when they enter.
+  const voiceAId = getVoiceASpeakerVoiceId()
+  useEffect(() => {
+    if (!hasEntered && voiceAId) {
+      prefetchTTS(WELCOME_TEXT, voiceAId)
+    }
+  }, [hasEntered, voiceAId])
 
   if (!hasEntered) {
     return (

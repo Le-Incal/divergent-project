@@ -4,7 +4,7 @@ import { useChat } from '../hooks/useChat'
 import { playTTS } from '../utils/tts'
 import { createSilenceDetector } from '../utils/silenceDetector'
 
-const WELCOME_TEXT = "Welcome to Divergent. What's on your mind?"
+export const WELCOME_TEXT = "Welcome to Divergent. What's on your mind?"
 const ACK_TEXT = "Got it. Is that everything, or would you like to add anything else?"
 const RETRY_TEXT = "I didn't catch that. Could you try again?"
 
