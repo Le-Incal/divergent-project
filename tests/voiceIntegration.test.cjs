@@ -113,4 +113,29 @@ if (require.main === module) {
   runSmokeTests().catch(console.error);
 }
 
+// ── Unit tests for exported helpers (so Jest doesn't fail on empty suite) ──
+
+describe('Voice Integration: Leak Detection', () => {
+  test('checkNoLeaks detects architecture terms', () => {
+    const leaks = checkNoLeaks('The centripetal doctrine engine fires up');
+    expect(leaks).toContain('centripetal');
+    expect(leaks).toContain('doctrine');
+  });
+
+  test('checkNoLeaks returns empty for clean output', () => {
+    const leaks = checkNoLeaks('You should consider your long-term goals and values.');
+    expect(leaks).toEqual([]);
+  });
+
+  test('countMarkers scores ethos vocabulary', () => {
+    const hits = countMarkers('Build character through integrity and trust.', ETHOS_MARKERS);
+    expect(hits).toBeGreaterThanOrEqual(2);
+  });
+
+  test('countMarkers scores ego vocabulary', () => {
+    const hits = countMarkers('Seize the opportunity and build momentum with leverage.', EGO_MARKERS);
+    expect(hits).toBeGreaterThanOrEqual(2);
+  });
+});
+
 module.exports = { checkNoLeaks, countMarkers, ETHOS_MARKERS, EGO_MARKERS, CODENAME_FRAGMENTS, SMOKE_QUESTIONS };

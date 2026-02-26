@@ -54,7 +54,7 @@ describe('Prompt Hygiene: Real Name Detection', () => {
       const outsideSection3 = beforeSection3 + afterSection3;
 
       const leaks = REAL_NAMES.filter((name) =>
-        outsideSection3.toLowerCase().includes(name.toLowerCase())
+        new RegExp(`\\b${name}\\b`, 'i').test(outsideSection3)
       );
 
       if (leaks.length > 0) {
@@ -76,7 +76,7 @@ describe('Prompt Hygiene: Section 3 Real Name Check', () => {
 
       const section3 = content.substring(section3Start, section4Start);
       const leaks = REAL_NAMES.filter((name) =>
-        section3.toLowerCase().includes(name.toLowerCase())
+        new RegExp(`\\b${name}\\b`, 'i').test(section3)
       );
 
       if (leaks.length > 0) {

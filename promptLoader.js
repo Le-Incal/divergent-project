@@ -41,7 +41,7 @@ export async function getVoicePrompt(voice, mode, appendTransition = null) {
   if (appendTransition && appendTransition === voice) {
     const stFile = TRANSITION_FILES[voice]
     const stText = await getTransitionPrompt(voice)
-    text = text + '\n\n' + stText
+    text = text + '\n\n---\n\n' + stText
   }
   voiceCache[cacheKey] = text
   return text
