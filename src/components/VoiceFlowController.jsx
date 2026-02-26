@@ -31,7 +31,10 @@ export default function VoiceFlowController({ active }) {
   const cleanupFnsRef = useRef([])
   const userMsgIdRef = useRef(null)
 
-  const hostVoiceId = getVoiceASpeakerVoiceId()
+  // Use a ref so the running flow always reads the *latest* voice ID,
+  // even if /api/voices resolves after runFlow has already started.
+  const voiceIdGetterRef = useRef(getVoiceASpeakerVoiceId)
+  useEffect(() => { voiceIdGetterRef.current = getVoiceASpeakerVoiceId })
 
   const setStage = useCallback(
     (stage) => dispatch({ type: 'SET_VOICE_FLOW_STAGE', payload: stage }),
@@ -56,17 +59,20 @@ export default function VoiceFlowController({ active }) {
     [dispatch],
   )
 
-  // Speak via ElevenLabs TTS (no browser fallback)
+  // Speak via ElevenLabs TTS (no browser fallback).
+  // Reads voice ID from ref at call-time so it picks up auto-discovery results
+  // even when the flow started before /api/voices resolved.
   const speakHost = useCallback(
     async (text) => {
       addHostMessage(text)
-      if (!hostVoiceId) {
+      const voiceId = voiceIdGetterRef.current()
+      if (!voiceId) {
         console.warn('No ElevenLabs voice configured — skipping TTS')
         return
       }
-      await playTTS(text, hostVoiceId)
+      await playTTS(text, voiceId)
     },
-    [addHostMessage, hostVoiceId],
+    [addHostMessage],
   )
 
   // Record audio until silence, then transcribe via /api/stt.
@@ -146,6 +152,13 @@ export default function VoiceFlowController({ active }) {
     userMsgIdRef.current = null
 
     try {
+      // Wait briefly for /api/voices auto-discovery so hostVoiceId resolves.
+      // Poll every 200ms for up to 3s; if still null, proceed (TTS will be skipped).
+      for (let waited = 0; waited < 3000 && !voiceIdGetterRef.current(); waited += 200) {
+        if (abortRef.current) return
+        await new Promise((r) => setTimeout(r, 200))
+      }
+
       // Step 1: Welcome greeting
       setStage('greeting')
       await speakHost(WELCOME_TEXT)
