@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useApp } from './context/AppContext'
 import Header from './components/Header'
 import ChatThread from './components/ChatThread'
@@ -6,9 +6,12 @@ import InputArea from './components/InputArea'
 import LandingPage from './components/LandingPage'
 import SidePanel from './components/SidePanel'
 import VoiceFlowController from './components/VoiceFlowController'
+import { prefetchTTS } from './utils/tts'
+
+const WELCOME_TEXT = "Welcome to Divergent. What's on your mind?"
 
 function App() {
-  const { state, dispatch, setMode } = useApp()
+  const { state, dispatch, setMode, getVoiceASpeakerVoiceId } = useApp()
   const [panelOpen, setPanelOpen] = useState(false)
   const [replyContext, setReplyContext] = useState(null)
 
@@ -41,6 +44,14 @@ function App() {
     }
     setHasEntered(false)
   }
+
+  // Prefetch welcome TTS audio as soon as voice ID resolves (while still on landing page)
+  const hostVoiceId = getVoiceASpeakerVoiceId()
+  useEffect(() => {
+    if (!hasEntered && hostVoiceId) {
+      prefetchTTS(WELCOME_TEXT, hostVoiceId)
+    }
+  }, [hasEntered, hostVoiceId])
 
   if (!hasEntered) {
     return (

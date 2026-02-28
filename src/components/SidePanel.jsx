@@ -11,6 +11,7 @@ const TABS = [
 export default function SidePanel({ open, onClose, onNewChat }) {
   const {
     state,
+    dispatch,
     loadChat,
     deleteChat,
     deleteAllChats,
@@ -212,29 +213,58 @@ export default function SidePanel({ open, onClose, onNewChat }) {
                   const voiceOptions = state.availableVoices?.length
                     ? state.availableVoices.map((v) => ({ key: v.voiceId, value: v.voiceId, label: v.name }))
                     : VOICES.map((v) => ({ key: v.id, value: v.id, label: v.name }))
+                  const ttsConfigured =
+                    (state.availableVoices?.length ?? 0) > 0 &&
+                    !String(state.voiceAVoiceId ?? '').startsWith('REPLACE_') &&
+                    !String(state.voiceBVoiceId ?? '').startsWith('REPLACE_')
                   return (
-                    <div className="panelFormGrid">
-                      <div className="panelField">
-                        <label className="panelFieldLabel">{voiceALabel}</label>
-                        <select className="panelSelect" value={state.voiceAVoiceId} onChange={(e) => setVoiceAVoice(e.target.value)}>
-                          {voiceOptions.map((v) => (
-                            <option key={v.key} value={v.value}>
-                              {v.label}
-                            </option>
-                          ))}
-                        </select>
+                    <>
+                      <div className="panelFormGrid">
+                        <div className="panelField">
+                          <label className="panelFieldLabel">{voiceALabel}</label>
+                          <select className="panelSelect" value={state.voiceAVoiceId} onChange={(e) => setVoiceAVoice(e.target.value)}>
+                            {voiceOptions.map((v) => (
+                              <option key={v.key} value={v.value}>
+                                {v.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="panelField">
+                          <label className="panelFieldLabel">{voiceBLabel}</label>
+                          <select className="panelSelect" value={state.voiceBVoiceId} onChange={(e) => setVoiceBVoice(e.target.value)}>
+                            {voiceOptions.map((v) => (
+                              <option key={v.key} value={v.value}>
+                                {v.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
                       </div>
-                      <div className="panelField">
-                        <label className="panelFieldLabel">{voiceBLabel}</label>
-                        <select className="panelSelect" value={state.voiceBVoiceId} onChange={(e) => setVoiceBVoice(e.target.value)}>
-                          {voiceOptions.map((v) => (
-                            <option key={v.key} value={v.value}>
-                              {v.label}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
+                      <p className="panelTtsStatus" role="status" aria-live="polite">
+                        {ttsConfigured
+                          ? 'TTS: ready'
+                          : 'TTS: not configured. Set ELEVENLABS_API_KEY and add voice IDs in Settings to enable.'}
+                      </p>
+                      {!ttsConfigured && (
+                        <p className="panelTtsHelp" title="Speech uses ElevenLabs. Set ELEVENLABS_API_KEY and add voice IDs from elevenlabs.io to enable.">
+                          Speech uses ElevenLabs. Set ELEVENLABS_API_KEY and add voice IDs from elevenlabs.io to enable.
+                        </p>
+                      )}
+                      {state.ttsError && (
+                        <p className="panelTtsError" role="alert">
+                          {state.ttsError}
+                          <button
+                            type="button"
+                            className="panelTtsErrorDismiss"
+                            onClick={() => dispatch({ type: 'CLEAR_TTS_ERROR' })}
+                            aria-label="Dismiss"
+                          >
+                            ×
+                          </button>
+                        </p>
+                      )}
+                    </>
                   )
                 })()}
               </div>

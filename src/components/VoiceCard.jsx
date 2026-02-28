@@ -3,7 +3,7 @@ import { useApp } from '../context/AppContext'
 import { playTTS } from '../utils/tts'
 
 export default function VoiceCard({ voice, type, response, isLoading }) {
-  const { getVoiceAProvider, getVoiceBProvider, getVoiceASpeakerVoiceId, getVoiceBSpeakerVoiceId } = useApp()
+  const { dispatch, getVoiceAProvider, getVoiceBProvider, getVoiceASpeakerVoiceId, getVoiceBSpeakerVoiceId } = useApp()
   const [isPlaying, setIsPlaying] = useState(false)
   const isLeftCard = type === 'challenger'
   const provider = isLeftCard ? getVoiceAProvider() : getVoiceBProvider()
@@ -16,6 +16,7 @@ export default function VoiceCard({ voice, type, response, isLoading }) {
       await playTTS(response, speakerVoiceId)
     } catch (e) {
       console.error('TTS play error:', e)
+      dispatch({ type: 'SET_TTS_ERROR', payload: e?.message || 'TTS request failed. Check network.' })
     } finally {
       setIsPlaying(false)
     }

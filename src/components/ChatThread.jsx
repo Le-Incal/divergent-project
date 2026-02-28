@@ -61,6 +61,7 @@ function VoiceMessage({ message, voiceName, onReply, speakerVoiceId, isAutoPlayi
       await playTTS(message.text, speakerVoiceId)
     } catch (e) {
       console.error('TTS play error:', e)
+      onTtsError?.(e)
     } finally {
       setIsPlaying(false)
     }
@@ -147,7 +148,10 @@ function groupMessages(messages) {
 }
 
 export default function ChatThread({ onReply }) {
-  const { state, getActiveFramework, getVoiceASpeakerVoiceId, getVoiceBSpeakerVoiceId } = useApp()
+  const { state, dispatch, getActiveFramework, getVoiceASpeakerVoiceId, getVoiceBSpeakerVoiceId } = useApp()
+  const handleTtsError = (e) => {
+    dispatch({ type: 'SET_TTS_ERROR', payload: e?.message || 'TTS request failed. Check network.' })
+  }
   const framework = getActiveFramework()
   const bottomRef = useRef(null)
   const isAtBottomRef = useRef(true)
@@ -190,6 +194,7 @@ export default function ChatThread({ onReply }) {
         await playTTS(msg.text, voiceId)
       } catch (e) {
         console.error('TTS auto-play error:', e)
+        dispatch({ type: 'SET_TTS_ERROR', payload: e?.message || 'TTS request failed. Check network.' })
       } finally {
         setCurrentPlayingId(null)
         processQueue()
@@ -235,6 +240,7 @@ export default function ChatThread({ onReply }) {
                 onReply={onReply}
                 speakerVoiceId={getVoiceASpeakerVoiceId()}
                 isAutoPlaying={currentPlayingId === group.ethos.id}
+                onTtsError={handleTtsError}
               />
               <VoiceMessage
                 message={group.ego}
@@ -242,6 +248,7 @@ export default function ChatThread({ onReply }) {
                 onReply={onReply}
                 speakerVoiceId={getVoiceBSpeakerVoiceId()}
                 isAutoPlaying={currentPlayingId === group.ego.id}
+                onTtsError={handleTtsError}
               />
             </div>
           )
@@ -265,6 +272,7 @@ export default function ChatThread({ onReply }) {
             onReply={onReply}
             speakerVoiceId={speakerVoiceId}
             isAutoPlaying={currentPlayingId === msg.id}
+            onTtsError={handleTtsError}
           />
         )
       })}

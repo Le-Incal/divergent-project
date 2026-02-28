@@ -216,6 +216,7 @@ const initialState = {
   voiceAVoiceId: VOICES[0]?.id ?? 'male-1',
   voiceBVoiceId: VOICES[1]?.id ?? 'female-1',
   availableVoices: [], // populated from /api/voices on mount
+  ttsError: null, // transient error when TTS play fails (e.g. network)
   debateOverlap: 50,
   userInput: '',
   isLoading: false,
@@ -305,6 +306,10 @@ const reducer = (state, action) => {
     }
     case 'SET_DEBATE_OVERLAP':
       return { ...state, debateOverlap: Math.min(100, Math.max(0, Number(action.payload))) }
+    case 'SET_TTS_ERROR':
+      return { ...state, ttsError: action.payload ?? null }
+    case 'CLEAR_TTS_ERROR':
+      return { ...state, ttsError: null }
     case 'SET_USER_INPUT':
       return applyActiveChatPatch(
         { ...state, userInput: action.payload },
