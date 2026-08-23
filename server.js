@@ -3,6 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import { createHash, timingSafeEqual } from 'crypto';
 import { resolveSystemPrompt, getResolutionPrompt } from './promptLoader.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -49,6 +50,27 @@ app.use(express.json());
 
 // Serve static files from the dist folder
 app.use(express.static(join(__dirname, 'dist')));
+
+// Site access gate: validates the pre-launch password without shipping it to the client
+app.post('/api/access', (req, res) => {
+  const expected = process.env.SITE_PASSWORD;
+  if (!expected) {
+    return res.status(503).json({ error: 'Access gate not configured' });
+  }
+
+  const { password } = req.body || {};
+  if (!password || typeof password !== 'string') {
+    return res.status(400).json({ error: 'Missing password' });
+  }
+
+  // Hash both sides so the comparison operates on equal-length buffers
+  const hash = (value) => createHash('sha256').update(value).digest();
+  if (!timingSafeEqual(hash(password), hash(expected))) {
+    return res.status(401).json({ error: 'Incorrect password' });
+  }
+
+  res.json({ ok: true });
+});
 
 // Resolve system prompt: use file-based prompts for Ethos/Ego when voice+mode provided
 async function getSystemPrompt(body) {
@@ -500,6 +522,11 @@ app.get('*', (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`Divergent server running on port ${PORT}`);
+  if (process.env.SITE_PASSWORD) {
+    console.log('Access gate: SITE_PASSWORD configured');
+  } else {
+    console.warn('Access gate: SITE_PASSWORD not set - nobody can pass the Coming Soon screen');
+  }
   if (process.env.ELEVENLABS_API_KEY) {
     console.log('ElevenLabs: API key configured (STT + TTS)');
   } else {
