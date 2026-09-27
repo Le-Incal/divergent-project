@@ -40,8 +40,9 @@ async function callClaude(systemPrompt, userMessage) {
       'anthropic-version': '2023-06-01',
     },
     body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-5',
       max_tokens: 1024,
+      thinking: { type: 'disabled' },
       system: systemPrompt,
       messages: [{ role: 'user', content: userMessage }],
     }),
@@ -278,7 +279,7 @@ async function main() {
 
   await writeFile(jsonPath, JSON.stringify({ timestamp, provider: 'claude', results }, null, 2));
 
-  let md = `# Personality Test Results\n\n**Run:** ${timestamp}  \n**Provider:** Claude (claude-sonnet-4-20250514)\n\n`;
+  let md = `# Personality Test Results\n\n**Run:** ${timestamp}  \n**Provider:** Claude (claude-sonnet-5)\n\n`;
   for (const r of results) {
     md += `## ${r.scenarioId} ${r.scenarioName} — ${r.label}\n\n`;
     md += `**Category:** ${r.category}\n\n`;

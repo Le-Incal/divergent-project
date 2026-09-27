@@ -12,6 +12,7 @@ const __dirname = dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const CLAUDE_MODEL = 'claude-sonnet-5';
 
 function chatTokenLimit(body) {
   const requested = Number(body?.maxTokens);
@@ -77,8 +78,9 @@ app.post('/api/chat-claude', async (req, res) => {
     }
 
     const claudeBody = {
-      model: 'claude-sonnet-4-6',
+      model: CLAUDE_MODEL,
       max_tokens: chatTokenLimit(req.body),
+      thinking: { type: 'disabled' },
       stream: true,
       system: systemPrompt,
       messages: [{ role: 'user', content: message }],
@@ -178,8 +180,9 @@ app.post('/api/chat-claude', async (req, res) => {
             'anthropic-version': '2023-06-01',
           },
           body: JSON.stringify({
-            model: 'claude-sonnet-4-6',
+            model: CLAUDE_MODEL,
             max_tokens: 1400,
+            thinking: { type: 'disabled' },
             system: systemPrompt,
             tools: diagramTools(),
             tool_choice: { type: 'tool', name: 'emit_diagram' },
@@ -487,8 +490,9 @@ ${conversationHistory.map((m) => `${m.name || m.speaker}: ${m.text}`).join('\n')
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
+        model: CLAUDE_MODEL,
         max_tokens: 1024,
+        thinking: { type: 'disabled' },
         system: resolutionPrompt,
         messages: [{ role: 'user', content: contextBlock }],
       }),

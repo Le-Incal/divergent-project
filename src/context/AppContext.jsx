@@ -26,7 +26,7 @@ export const PROVIDERS = {
   claude: {
     id: 'claude',
     name: 'Claude',
-    model: 'claude-sonnet-4-6',
+    model: 'claude-sonnet-5',
     endpoint: '/api/chat-claude',
     color: '#D97757',
   },
