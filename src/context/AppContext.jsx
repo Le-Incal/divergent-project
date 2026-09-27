@@ -458,7 +458,6 @@ const reducer = (state, action) => {
       return {
         ...state,
         activeChatId: chat.id,
-        mode: chat.mode || state.mode,
         activeFramework: chat.frameworkId || state.activeFramework,
         userInput: chat.userInput || '',
         voiceAResponse: chat.voiceAResponse ?? null,

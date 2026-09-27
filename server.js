@@ -383,7 +383,7 @@ app.post('/api/chat-grok', async (req, res) => {
       },
       body: JSON.stringify({
         model: 'grok-4.3',
-        reasoning_effort: 'low',
+        reasoning_effort: 'none',
         stream: true,
         messages: [
           { role: 'system', content: systemPrompt },

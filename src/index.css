@@ -131,8 +131,20 @@
   --link-underline-hover: rgba(245, 245, 245, 0.62);
   --selection-text: #0f0f0f;
   --accent-muted: rgba(203, 242, 124, 0.28);
-  --ethos-hover: #1e3a4f;
-  --ego-hover: #4a301c;
+  --ethos-hover: #182430;
+  --ego-hover: #2a2018;
+}
+
+/* Sandpit hovers stay near the black surface so the light text remains readable. */
+[data-mode="sandpit"] .chatVoiceMsg--ethos .chatBlock.isHovered,
+[data-mode="sandpit"] .chatVoiceMsg--ethos .chatBlock.isOpen,
+[data-mode="sandpit"] .brainstormChoice--ethos:hover {
+  background: #182430;
+}
+[data-mode="sandpit"] .chatVoiceMsg--ego .chatBlock.isHovered,
+[data-mode="sandpit"] .chatVoiceMsg--ego .chatBlock.isOpen,
+[data-mode="sandpit"] .brainstormChoice--ego:hover {
+  background: #2a2018;
 }
 
 /* Sandpit: input box visible, green highlight readable */
