@@ -382,7 +382,7 @@ app.post('/api/chat-grok', async (req, res) => {
         'Authorization': `Bearer ${process.env.XAI_API_KEY}`,
       },
       body: JSON.stringify({
-        model: 'grok-4.7',
+        model: 'grok-4.3',
         reasoning_effort: 'low',
         stream: true,
         messages: [

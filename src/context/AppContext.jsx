@@ -46,7 +46,7 @@ export const PROVIDERS = {
   grok: {
     id: 'grok',
     name: 'Grok',
-    model: 'grok-4.7',
+    model: 'grok-4.3',
     endpoint: '/api/chat-grok',
     color: '#1DA1F2',
   },
