@@ -371,6 +371,10 @@ app.post('/api/chat-grok', async (req, res) => {
       return res.status(400).json({ error: 'Missing systemPrompt or voice+mode' });
     }
 
+    if (!process.env.XAI_API_KEY) {
+      return res.status(500).json({ error: 'Grok API key is not configured' });
+    }
+
     const response = await fetch('https://api.x.ai/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -378,7 +382,8 @@ app.post('/api/chat-grok', async (req, res) => {
         'Authorization': `Bearer ${process.env.XAI_API_KEY}`,
       },
       body: JSON.stringify({
-        model: 'grok-2',
+        model: 'grok-4.7',
+        reasoning_effort: 'low',
         stream: true,
         messages: [
           { role: 'system', content: systemPrompt },
@@ -391,7 +396,17 @@ app.post('/api/chat-grok', async (req, res) => {
     if (!response.ok) {
       const error = await response.text();
       console.error('Grok API error:', error);
-      return res.status(response.status).json({ error: 'Grok API request failed' });
+      let detail = 'Grok API request failed';
+      try {
+        const parsed = JSON.parse(error);
+        const message = parsed?.error?.message || parsed?.error || parsed?.message;
+        if (typeof message === 'string' && message.length > 0 && message.length < 240) {
+          detail = `Grok API request failed: ${message}`;
+        }
+      } catch {
+        // Keep the generic message when xAI does not return JSON.
+      }
+      return res.status(response.status).json({ error: detail });
     }
 
     res.setHeader('Content-Type', 'text/event-stream');
