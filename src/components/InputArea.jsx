@@ -74,7 +74,7 @@ export function QuestionPrompt({ disabled = false, onSubmit, onOpenHistory, onOp
   return (
     <form className="questionPrompt" onSubmit={submit}>
       <label className="questionPromptLabel" htmlFor="divergent-question">
-        What's on your mind?
+        What decision do you need to make?
       </label>
       <GrowingTextarea
         id="divergent-question"
