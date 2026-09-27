@@ -8,7 +8,7 @@ import LandingPage from './components/LandingPage'
 import SidePanel from './components/SidePanel'
 
 function App() {
-  const { state, dispatch, setMode } = useApp()
+  const { state, dispatch } = useApp()
   const { sendMessage, startDebate, startElaborate, regenerateMessage, startBrainstorm, acceptDiagramOffer, declineDiagramOffer } = useChat()
   const [panelView, setPanelView] = useState(null)
 
@@ -32,7 +32,6 @@ function App() {
   const restartToLanding = () => {
     dispatch({ type: 'CLEAR_RESPONSES' })
     setPanelView(null)
-    setMode('default')
     try {
       sessionStorage.removeItem('divergent-has-entered')
     } catch {

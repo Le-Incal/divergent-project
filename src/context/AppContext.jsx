@@ -3,6 +3,7 @@ import { createContext, useContext, useEffect, useReducer } from 'react'
 const AppContext = createContext()
 
 const HISTORY_STORAGE_KEY = 'divergent-chat-histories-v1'
+const MODALITY_STORAGE_KEY = 'divergent-modality-v1'
 
 function safeJsonParse(value, fallback) {
   try {
@@ -198,6 +199,24 @@ Speak with bold originality. Use **bold** for unconventional insights and opport
 function getSystemPrompt(voice, mode) {
   const prompt = mode === 'sandpit' ? voice.systemPromptSandpit : voice.systemPromptDefault
   return prompt ?? voice.systemPrompt ?? null
+}
+
+function readModality() {
+  try {
+    const saved = safeJsonParse(localStorage.getItem(MODALITY_STORAGE_KEY) || 'null', null)
+    if (!saved || typeof saved !== 'object') return null
+    const mode = saved.mode === 'sandpit' || saved.mode === 'default' ? saved.mode : null
+    if (!mode) return null
+    const provider = (id) => (id && PROVIDERS[id] ? id : 'claude')
+    return {
+      mode,
+      voiceAProvider: provider(saved.voiceAProvider),
+      voiceBProvider: provider(saved.voiceBProvider),
+      maxExchangeRounds: mode === 'sandpit' ? 5 : 3,
+    }
+  } catch {
+    return null
+  }
 }
 
 const initialState = {
@@ -496,8 +515,12 @@ export function AppProvider({ children }) {
     initialState,
     (init) => {
       const fromStorage = safeJsonParse(localStorage.getItem(HISTORY_STORAGE_KEY) || '[]', [])
-      if (!Array.isArray(fromStorage)) return init
-      return { ...init, chatHistories: fromStorage }
+      const modality = readModality()
+      return {
+        ...init,
+        ...(Array.isArray(fromStorage) ? { chatHistories: fromStorage } : {}),
+        ...(modality || {}),
+      }
     },
   )
 
@@ -508,6 +531,18 @@ export function AppProvider({ children }) {
       // ignore
     }
   }, [state.chatHistories])
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(MODALITY_STORAGE_KEY, JSON.stringify({
+        mode: state.mode,
+        voiceAProvider: state.voiceAProvider,
+        voiceBProvider: state.voiceBProvider,
+      }))
+    } catch {
+      // ignore
+    }
+  }, [state.mode, state.voiceAProvider, state.voiceBProvider])
 
   const getActiveFramework = () => {
     const fw = FRAMEWORKS[state.activeFramework]

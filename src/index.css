@@ -131,6 +131,8 @@
   --link-underline-hover: rgba(245, 245, 245, 0.62);
   --selection-text: #0f0f0f;
   --accent-muted: rgba(203, 242, 124, 0.28);
+  --ethos-hover: #1e3a4f;
+  --ego-hover: #4a301c;
 }
 
 /* Sandpit: input box visible, green highlight readable */
