@@ -462,14 +462,6 @@ export default function ChatThread({ onReplyToVoice, onReplyToBoth, onDebate, on
             <button type="button" className="chatDebateBtn" onClick={onDebate}>
               Debate
             </button>
-            <button
-              type="button"
-              className={`chatDebateBtn ${brainstormOpen ? 'isActive' : ''}`}
-              aria-expanded={brainstormOpen}
-              onClick={() => setBrainstormOpen((current) => !current)}
-            >
-              Brainstorm
-            </button>
             <button type="button" className="chatDebateBtn" onClick={onElaborate}>
               Elaborate
             </button>
@@ -480,6 +472,14 @@ export default function ChatThread({ onReplyToVoice, onReplyToBoth, onDebate, on
               onClick={() => setRespondBothOpen((current) => !current)}
             >
               Respond to both
+            </button>
+            <button
+              type="button"
+              className={`chatDebateBtn ${brainstormOpen ? 'isActive' : ''}`}
+              aria-expanded={brainstormOpen}
+              onClick={() => setBrainstormOpen((current) => !current)}
+            >
+              Brainstorm
             </button>
           </div>
           {respondBothOpen && (
