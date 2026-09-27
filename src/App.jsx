@@ -29,15 +29,9 @@ function App() {
     setHasEntered(true)
   }
 
-  const restartToLanding = () => {
+  const startNewChat = () => {
     dispatch({ type: 'CLEAR_RESPONSES' })
     setPanelView(null)
-    try {
-      sessionStorage.removeItem('divergent-has-entered')
-    } catch {
-      // ignore
-    }
-    setHasEntered(false)
   }
 
   if (!hasEntered) {
@@ -52,12 +46,12 @@ function App() {
 
   return (
     <div className="min-h-screen appShell" data-mode={state.mode}>
-      <Header onRestart={restartToLanding} />
+      <Header onRestart={startNewChat} />
       <SidePanel
         open={panelView != null}
         view={panelView || 'settings'}
         onClose={() => setPanelView(null)}
-        onNewChat={restartToLanding}
+        onNewChat={startNewChat}
       />
 
       <main className="appMain">

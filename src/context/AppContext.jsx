@@ -32,7 +32,7 @@ export const PROVIDERS = {
   },
   openai: {
     id: 'openai',
-    name: 'GPT-4o',
+    name: 'GPT',
     model: 'gpt-4o',
     endpoint: '/api/chat-openai',
     color: '#10A37F',
