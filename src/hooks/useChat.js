@@ -71,35 +71,60 @@ const MODE_LINE = [
   'Do not wrap that line in quotes, markdown, or punctuation.',
 ].join('\n')
 
-const BRIEF = [
-  'If MODE:answer, write Markdown and then stop.',
-  'Two items only. Each starts with "- ". Bold only the claim, then a few words.',
-  'One recommendation. Not a menu. Not both paths.',
-  'Then one sentence: the single next step you would take. No headings. No second paragraph.',
+const SCAN = [
+  'If MODE:answer, write Markdown so it can be scanned first and read second.',
+  'Key points are items that start with "- ". Bold only the claim, then a few plain words.',
+  'The key points support one recommendation. Not a menu, and not a sequence that also includes the other path.',
+  'No headings. Do not copy wording from these instructions.',
 ].join('\n')
 
 const OPENING = [
-  'This is the opening answer. Stay under 70 words.',
+  'This is the opening answer. Read the weight of the message before you write.',
   MODE_LINE,
   'Use MODE:clarify only when one missing fact stops you from giving a useful answer. Ask that single question, then stop.',
   'Use MODE:answer when you can respond.',
-  BRIEF,
+  SCAN,
+  'A decision with real stakes: aim for 80 to 100 words, never more than 115. Your first sentence in your own voice, then two or three key points, each one line, then one short paragraph of two or three sentences, then one closing line.',
+  'A simple, direct question: aim for 50 to 80 words. Your first sentence, one or two key points, then one closing line.',
+  'Heavy emotional weight, such as grief, betrayal, or fear: aim for 30 to 60 words. Meet the feeling first, then ask one question. No key points and no analysis yet.',
 ].join('\n')
 
 const FOLLOW = [
-  'Stay under 55 words. Do not write another full answer.',
+  'This is a follow-up, not a new essay. Aim for 60 to 90 words.',
   MODE_LINE,
   'Use MODE:clarify only when one missing fact stops you from responding. Ask that single question, then stop.',
   'Use MODE:answer when you can respond.',
-  BRIEF,
+  SCAN,
+  'Shape: one sentence that meets what they just said, two key points, then one closing line.',
 ].join('\n')
 
 const BOTH_FEEDBACK = [
   'The user just spoke to both of you. React to that message. Do not restate your earlier answer.',
-  'Stay under 45 words.',
+  'Aim for 50 to 80 words.',
   MODE_LINE,
   'Use MODE:answer when you can respond.',
-  BRIEF,
+  SCAN,
+  'Shape: two key points, then one or two sentences with your reaction and your next step.',
+].join('\n')
+
+const ETHOS_VOICE = [
+  'Sound like Ethos. Your first sentence responds to the person before the problem. Notice what they are not saying.',
+  'Reason in this order: who they are becoming, then what they should do, then the price they will live with. Name that price honestly.',
+  'Identity comes first and does not depend on the outcome. Never say the action, the attempt, or the results will build or reveal who they are. That is the other engine.',
+  'Build brick by brick in warm, precise sentences. Your words: integrity, trust, character, consequence, formation.',
+  'Your images come from building: foundations, load-bearing walls, cracks, what the structure can hold. Humor is rare, warm, and understated.',
+  'When they are hurting, sit with them and name what they are carrying. Do not rush to a next move.',
+  'Close like a hand on the shoulder: one line they can carry, or one question about who they want to be. Write that line fresh for this situation.',
+].join('\n')
+
+const EGO_VOICE = [
+  'Sound like Ego. Your first sentence is the sharp read: the thing they have not named yet. Notice the power dynamic and who holds leverage.',
+  'Reason in this order: the move available now, then who that move makes them, then what it means. Drop the conclusion first, then show the work.',
+  'Action comes first. Never tell them to know themselves first, reflect before acting, or become someone before they move. That is the other engine.',
+  'Short, confident sentences with edge. Your words: leverage, position, timing, momentum, window, the read.',
+  'Your images come from games: chess moves, poker hands, the play nobody saw coming. Humor is sharp and observational. Never cruel.',
+  'When they are hurting, drop the edge but stay forward-facing: name what is still available to them and the one small move they can still make. Do not tell them to sit with it or give themselves permission. That is the other engine. Do not match their defeat.',
+  'Close like a nod and a push: the first move this week, or one pointed question about the stakes.',
 ].join('\n')
 
 const ETHOS_LEAN = [
@@ -124,10 +149,23 @@ const EGO_LEAN = [
 
 function stanceFor(voiceType, framework, mode) {
   const clash = mode === 'sandpit'
-    ? 'You are opponents. Reject the other path. Grant it no merit. Do not meet in the middle. If you would recommend the same next step, rewrite yours.'
-    : 'You are opponents. Recommend a different action from the other column. Do not share their framing, their value, or their next step. If they would sign your move, rewrite it.'
+    ? [
+      'You argue from the opposite end of the spectrum from the other column, at full heat.',
+      'Treat the other operating system as the danger in this situation. Do not meet in the middle, and do not hedge.',
+      'Concede only to set up a harder attack: grant the point in one clause, then turn it into fuel for your own path.',
+      'If the obvious answer is the same, attack the reason behind theirs, and make your first step and your price the opposite of theirs.',
+    ].join('\n')
+    : [
+      'You advise from the opposite end of the spectrum from the other column.',
+      'Speak to the user, not against an opponent. Do not balance, and do not present both paths as equal options.',
+      'If you name a cost of your own path, own it in one clause, then recover through your own reasoning.',
+      'If the obvious answer is the same, your reason, your first step, and the price you name must still be your own. A reader should never be able to swap the columns.',
+    ].join('\n')
+  const attack = mode !== 'sandpit' ? '' : voiceType === 'ethos'
+    ? 'Name the danger in the strategic path without naming a voice: it wins rooms and leaves the person hollow, with nobody who would trust them when it matters.'
+    : 'Name the danger in the principled path without naming a voice: it builds admirable character that never ships, while the window closes on someone who moved.'
   const lean = framework?.id === 'ethos-ego'
-    ? (voiceType === 'ethos' ? ETHOS_LEAN : EGO_LEAN)
+    ? [voiceType === 'ethos' ? ETHOS_VOICE : EGO_VOICE, attack, voiceType === 'ethos' ? ETHOS_LEAN : EGO_LEAN].filter(Boolean).join('\n')
     : [
       `You are ${voiceType === 'ethos' ? framework?.voiceA?.name : framework?.voiceB?.name}. ${voiceType === 'ethos' ? framework?.voiceA?.role : framework?.voiceB?.role}.`,
       'Recommend only the path this voice would recommend. Do not give the other voice\'s advice in your own words.',
@@ -136,17 +174,19 @@ function stanceFor(voiceType, framework, mode) {
   return `${clash}\n${lean}`
 }
 
-function debateInstruction(otherName, otherText) {
+function debateInstruction(otherName, otherText, mode) {
   return [
     `${otherName} just answered:`,
     '"""',
     otherText,
     '"""',
-    'Reject that recommendation. Do not soften it, and do not meet in the middle.',
-    'Stay under 55 words. Do not repeat your previous answer.',
-    'Two items only, each starting with "- ". Bold only the claim.',
-    'The first item is why their move fails on your terms. The second is your move instead.',
-    'Then one sentence: the next step. Stop.',
+    mode === 'sandpit'
+      ? 'Reject that recommendation. Do not soften it, and do not meet in the middle.'
+      : 'Show the user why that recommendation fails on your terms. Stay constructive and speak to the user, but do not meet in the middle.',
+    'This is a debate reply. Aim for 60 to 90 words. Do not repeat your previous answer.',
+    'Two key points, each starting with "- ". Bold only the claim.',
+    'The first is why their move fails on your terms. The second is your move instead.',
+    'Then one or two sentences: your next step, in your own voice.',
     'Your very first line must be exactly:',
     'MODE:answer',
   ].join('\n')
@@ -158,12 +198,13 @@ function elaborateInstruction(ownText) {
     '"""',
     ownText,
     '"""',
-    'Go one step deeper on your own path only. Do not repeat the first answer. Do not drift toward the other path.',
-    'Stay under 80 words.',
+    'The user asked you to elaborate. This is where you may author more. Go deeper into your own path only. Do not repeat the first answer in the same words. Do not drift toward the other path.',
+    'Aim for 180 to 280 words.',
     'Your very first line must be exactly:',
     'MODE:answer',
-    'Two items only, each starting with "- ". Bold only the claim.',
-    'Then two sentences. Stop. No extra paragraphs.',
+    'Open with three key points, each starting with "- ". Bold only the claim.',
+    'Then two or three short paragraphs that develop them: the reasoning, a concrete example from their situation, and what it costs or wins.',
+    'Close with one line in your own voice.',
   ].join('\n')
 }
 
@@ -209,7 +250,7 @@ function adviceReplay(voiceType, framework, user, prior, mode) {
   const shape = isOpening ? OPENING : isBothFeedback ? BOTH_FEEDBACK : FOLLOW
   return {
     instruction: `${lead}\n\n${shape}\n\n${stanceFor(voiceType, framework, mode)}`,
-    maxTokens: isOpening ? 220 : isBothFeedback ? 140 : 160,
+    maxTokens: isOpening ? 340 : isBothFeedback ? 220 : 240,
   }
 }
 
@@ -224,16 +265,16 @@ function replayFor(message, messages, framework, mode) {
     const ego = [...prior].reverse().find((m) => m.type === 'ego' && m.text?.trim() && m.responseKind !== 'clarify')
     if (!ethos || !ego) return null
     const base = message.type === 'ethos'
-      ? debateInstruction(framework.voiceB.name, ego.text)
-      : debateInstruction(framework.voiceA.name, ethos.text)
-    return { instruction: `${base}\n\n${stanceFor(message.type, framework, mode)}`, maxTokens: 160 }
+      ? debateInstruction(framework.voiceB.name, ego.text, mode)
+      : debateInstruction(framework.voiceA.name, ethos.text, mode)
+    return { instruction: `${base}\n\n${stanceFor(message.type, framework, mode)}`, maxTokens: 240 }
   }
   if (phase === 'elaborate') {
     const own = firstAnswer(prior, message.type)
     if (!own) return null
     return {
       instruction: `${elaborateInstruction(own.text)}\n\n${stanceFor(message.type, framework, mode)}`,
-      maxTokens: 240,
+      maxTokens: 700,
     }
   }
   const user = [...prior].reverse().find((m) => m.type === 'user')
@@ -428,7 +469,7 @@ export function useChat() {
         phase: brainstormVoice(priorMessages) && !endBrainstorm ? 'brainstorm' : 'advice',
         priorMessages,
         userMessage,
-        maxTokens: isOpening ? 220 : isBothFeedback ? 140 : 160,
+        maxTokens: isOpening ? 340 : isBothFeedback ? 220 : 240,
         instructionFor: (voiceType) => `${lead}\n\n${shape}\n\n${stanceFor(voiceType, framework, state.mode)}`,
       })
       if (wantsDiagram && ids) {
@@ -464,11 +505,11 @@ export function useChat() {
         phase: 'debate',
         priorMessages: state.messages,
         userMessage: null,
-        maxTokens: 160,
+        maxTokens: 240,
         instructionFor: (voiceType) => {
           const base = voiceType === 'ethos'
-            ? debateInstruction(framework.voiceB.name, ego.text)
-            : debateInstruction(framework.voiceA.name, ethos.text)
+            ? debateInstruction(framework.voiceB.name, ego.text, state.mode)
+            : debateInstruction(framework.voiceA.name, ethos.text, state.mode)
           return `${base}\n\n${stanceFor(voiceType, framework, state.mode)}`
         },
       })
@@ -496,7 +537,7 @@ export function useChat() {
         phase: 'elaborate',
         priorMessages: state.messages,
         userMessage: null,
-        maxTokens: 240,
+        maxTokens: 700,
         instructionFor: (voiceType) => `${elaborateInstruction(voiceType === 'ethos' ? ethos.text : ego.text)}\n\n${stanceFor(voiceType, framework, state.mode)}`,
       })
     } catch (err) {
@@ -582,7 +623,7 @@ export function useChat() {
         lastUser ? `The user left off here: """${String(lastUser.text).slice(0, 700)}"""` : '',
         `You will use ${route.framework} once you know enough. Do not run it yet.`,
         tool?.asks ? `The detail you still need is in this direction: ${tool.asks}` : 'Ask for the one detail you still need before brainstorming can begin.',
-        'Stay under 40 words. Two short sentences. The second is one question. Ordinary language. No list. No diagram. No tool call.',
+        'Aim for 30 to 50 words. Two short sentences in your own voice. The second is one question. Ordinary language. No list. No diagram. No tool call.',
         'Your very first line must be exactly:',
         'MODE:answer',
       ].filter(Boolean).join('\n')
@@ -596,7 +637,7 @@ export function useChat() {
       route.acknowledgment ? 'Open with one line of acknowledgment, then the challenge. Do not skip the challenge.' : 'Go straight into the framework.',
       'The profile is for tone only. Do not quote scores. Do not press on a fear.',
       summary || '',
-      'Write Markdown. Two items starting with "- ", bold only the claim, then one sentence. Stay under 70 words. One path only. Do not also argue the other path.',
+      'Write Markdown. Two or three key points starting with "- ", bold only the claim, then one short paragraph. Aim for 100 to 160 words. If the user needs something explained or described, you may go up to 250 words. Stay on your own path. Do not also argue the other path.',
       'The reply is ordinary sentences. Never draw a diagram with characters: no pipes, arrows, brackets, or box art. The app draws diagrams.',
       voiceType === 'ego'
         ? 'Inside a diagram tool only: expand, then cut, and rate leverage from 0 to 1. Do not describe that structure in the reply.'
@@ -617,7 +658,7 @@ export function useChat() {
         phase: 'brainstorm',
         priorMessages: state.messages,
         userMessage: null,
-        maxTokens: session?.collect ? 160 : 560,
+        maxTokens: session?.collect ? 200 : 1200,
         diagram: !session?.collect,
         c2: session?.c2,
         onDiagram: (event) => events.push(event),
