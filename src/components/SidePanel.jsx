@@ -1,11 +1,6 @@
 import { useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { useApp, FRAMEWORKS, PROVIDERS } from '../context/AppContext'
-
-const TABS = [
-  { id: 'voices', label: 'Voices' },
-  { id: 'settings', label: 'AI Modalities' },
-]
+import { useApp, PROVIDERS } from '../context/AppContext'
 
 export default function SidePanel({ open, onClose, onNewChat, view = 'settings' }) {
   const {
@@ -14,7 +9,6 @@ export default function SidePanel({ open, onClose, onNewChat, view = 'settings' 
     deleteChat,
     deleteAllChats,
     setMode,
-    setFramework,
     setVoiceAProvider,
     setVoiceBProvider,
     getActiveFramework,
@@ -26,9 +20,6 @@ export default function SidePanel({ open, onClose, onNewChat, view = 'settings' 
   const voiceALabel = framework?.voiceA?.name ?? 'Voice A'
   const voiceBLabel = framework?.voiceB?.name ?? 'Voice B'
 
-  const [activeTab, setActiveTab] = useState('voices')
-
-  const frameworks = useMemo(() => Object.values(FRAMEWORKS), [])
   const providers = useMemo(() => Object.values(PROVIDERS), [])
 
   if (!open) return null
@@ -38,30 +29,13 @@ export default function SidePanel({ open, onClose, onNewChat, view = 'settings' 
   return createPortal(
     <>
       <button type="button" className="panelBackdrop" onClick={onClose} aria-label="Close panel" />
-      <aside className="panel" role="dialog" aria-label={view === 'history' ? 'History' : 'Settings'} data-mode={state.mode}>
+      <aside className="panel" role="dialog" aria-label={view === 'history' ? 'History' : 'AI modalities'} data-mode={state.mode}>
         <div className="panelHeader">
-          <div className="panelTitle">{view === 'history' ? 'History' : 'Settings'}</div>
+          <div className="panelTitle">{view === 'history' ? 'History' : 'AI modalities'}</div>
           <button type="button" className="btn btn-secondary" onClick={onClose}>
             Close
           </button>
         </div>
-
-        {view === 'settings' && (
-          <div className="panelTabs" role="tablist" aria-label="Settings tabs">
-            {TABS.map((t) => (
-              <button
-                key={t.id}
-                type="button"
-                role="tab"
-                aria-selected={activeTab === t.id}
-                className={`panelTab ${activeTab === t.id ? 'isActive' : ''}`}
-                onClick={() => setActiveTab(t.id)}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
-        )}
 
         <div className="panelBody">
           {view === 'history' && (
@@ -137,26 +111,7 @@ export default function SidePanel({ open, onClose, onNewChat, view = 'settings' 
             </div>
           )}
 
-          {view === 'settings' && activeTab === 'voices' && (
-            <div className="panelSection">
-              <div className="panelSectionLabel">Unique voice selection</div>
-              <div className="panelTagGrid">
-                {frameworks.map((fw) => (
-                  <button
-                    key={fw.id}
-                    type="button"
-                    className="tag"
-                    data-active={state.activeFramework === fw.id ? 'true' : 'false'}
-                    onClick={() => setFramework(fw.id)}
-                  >
-                    {fw.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {view === 'settings' && activeTab === 'settings' && (
+          {view === 'settings' && (
             <>
               <div className="panelSection">
                 <div className="panelSectionLabel">Mode</div>
