@@ -72,9 +72,12 @@ function tidy(text, complete) {
   return complete ? cleaned.trim() : cleaned.replace(/[ \t]+$/g, '')
 }
 
+const MARKERS = ['mode:answer', 'mode:clarify', 'modeanswer', 'modeclarify']
+
 function kindFromMarker(head) {
-  if (head === 'mode:clarify') return 'clarify'
-  if (head === 'mode:answer') return 'answer'
+  const flat = compact(head).replace(/[^a-z:]/g, '')
+  if (flat === 'mode:answer' || flat === 'modeanswer') return 'answer'
+  if (flat === 'mode:clarify' || flat === 'modeclarify') return 'clarify'
   return null
 }
 
@@ -89,9 +92,7 @@ export function parseVoiceStream(raw, { complete = false } = {}) {
   if (newlineAt === -1) {
     const head = compact(source)
     const kind = kindFromMarker(head)
-    const pendingMarker =
-      head === '' ||
-      (!kind && ('mode:clarify'.startsWith(head) || 'mode:answer'.startsWith(head)))
+    const pendingMarker = head === '' || (!kind && MARKERS.some((marker) => marker.startsWith(head)))
 
     if (!complete && pendingMarker) {
       return { responseKind: null, text: '' }

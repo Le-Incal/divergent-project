@@ -46,6 +46,14 @@ test('a pipe drawing of the builder portrait is not shown as text', () => {
   expect(parsed.text).not.toMatch(/[│─┌└►▼]/)
 })
 
+test('a mode line without a colon is not shown', () => {
+  const raw = 'MODEanswer\n\n- **the leverage.** Identify what the coworker needs.'
+  const parsed = parseVoiceStream(raw, { complete: true })
+  expect(parsed.responseKind).toBe('answer')
+  expect(parsed.text).toBe('- **the leverage.** Identify what the coworker needs.')
+  expect(parsed.text).not.toMatch(/MODE/i)
+})
+
 test('ordinary replies stay intact', () => {
   const raw = 'MODE:answer\nThe center of this is still unknown.'
   expect(parseVoiceStream(raw, { complete: true }).text).toBe('The center of this is still unknown.')
