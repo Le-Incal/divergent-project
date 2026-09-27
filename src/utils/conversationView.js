@@ -26,8 +26,7 @@ export function asksForDiagram(text) {
   return false
 }
 
-export function fullWidthMessageIds(messages) {
-  const ids = new Set()
+function brainstormStretch(messages, onVoice) {
   let voice = null
   for (const message of messages || []) {
     if (voice && message.type === 'user' && message.audience === 'both') {
@@ -36,7 +35,7 @@ export function fullWidthMessageIds(messages) {
     }
     if (message.phase === 'brainstorm' && (message.type === 'ethos' || message.type === 'ego')) {
       voice = message.type
-      ids.add(message.id)
+      onVoice?.(message)
       continue
     }
     if (!voice || (message.type !== 'ethos' && message.type !== 'ego')) continue
@@ -51,9 +50,26 @@ export function fullWidthMessageIds(messages) {
       && (other.type === 'ethos' || other.type === 'ego')
     ))
     if (sharedTurn) voice = null
-    else ids.add(message.id)
+    else onVoice?.(message)
   }
+  return voice
+}
+
+export function brainstormVoice(messages) {
+  return brainstormStretch(messages)
+}
+
+export function fullWidthMessageIds(messages) {
+  const ids = new Set()
+  brainstormStretch(messages, (message) => ids.add(message.id))
   return ids
+}
+
+export function voicesForReply(messages, { target = 'both', endBrainstorm = false } = {}) {
+  const solo = brainstormVoice(messages)
+  if (solo && !endBrainstorm) return [solo]
+  if (target === 'ethos' || target === 'ego') return [target]
+  return ['ethos', 'ego']
 }
 
 export function canDebate(messages) {

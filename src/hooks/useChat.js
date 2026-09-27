@@ -1,7 +1,7 @@
 import { useCallback, useRef } from 'react'
 import { useApp, makeId } from '../context/AppContext'
 import { parseVoiceStream } from '../utils/parseVoiceStream'
-import { asksForDiagram } from '../utils/conversationView.js'
+import { asksForDiagram, brainstormVoice, voicesForReply } from '../utils/conversationView.js'
 import { ethosFrameworks, egoFrameworks } from '../brainstorm/kits.js'
 import { grammarFor } from '../diagram/registry.js'
 import { OFFER_COPY, evaluateDiagramTriggers } from '../diagram/triggers.js'
@@ -259,7 +259,7 @@ export function useChat() {
   const fetchDiagramRef = useRef(null)
   const diagramSessionRef = useRef({ declinedFramework: null, turn: 0, n1Complete: true })
 
-  const runVoices = useCallback(async ({ voices, instructionFor, phase, priorMessages, userMessage, maxTokens, replaceIds, diagram, c2, onDiagram }) => {
+  const runVoices = useCallback(async ({ voices, instructionFor, phase, priorMessages, userMessage, maxTokens, replaceIds, diagram, c2, onDiagram, emptyFallback }) => {
     const framework = getActiveFramework()
     const providerA = getVoiceAProvider()
     const providerB = getVoiceBProvider()
@@ -316,12 +316,14 @@ export function useChat() {
 
     const publish = (msgId, raw, complete, fallbackPhase) => {
       const parsed = parseVoiceStream(raw, { complete })
+      const blank = complete && !String(parsed.text || '').trim()
+      const text = blank && emptyFallback ? emptyFallback : parsed.text
       const responseKind = complete ? (parsed.responseKind || 'answer') : parsed.responseKind
       dispatch({
         type: 'UPDATE_MESSAGE_TEXT',
         payload: {
           id: msgId,
-          text: parsed.text,
+          text,
           responseKind,
           phase: responseKind === 'clarify' ? 'clarification' : fallbackPhase,
         },
@@ -403,11 +405,14 @@ export function useChat() {
 
     const replyTo = options.replyTo ? String(options.replyTo).trim() : ''
     const wantsDiagram = asksForDiagram(trimmed)
+    const endBrainstorm = options.endBrainstorm === true
+    const voices = voicesForReply(priorMessages, { target, endBrainstorm })
+    const audience = voices.length === 1 ? voices[0] : 'both'
     const userMessage = {
       id: makeId(),
       type: 'user',
       text: trimmed,
-      audience: wantsDiagram ? 'both' : target,
+      audience,
       replyTo: replyTo || null,
       phase: 'advising',
       round: state.clarificationRound,
@@ -415,33 +420,31 @@ export function useChat() {
       timestamp: Date.now(),
     }
     dispatch({ type: 'ADD_MESSAGE', payload: userMessage })
-
-    const voices = wantsDiagram || target === 'both' ? ['ethos', 'ego'] : [target]
-    const addressed = target === 'ethos' ? framework.voiceA.name : framework.voiceB.name
+    const addressed = audience === 'ethos' ? framework.voiceA.name : framework.voiceB.name
     const lead = wantsDiagram
       ? 'The user asked for a diagram. Answer in ordinary sentences. Do not draw with characters, brackets, or arrows. The app draws the diagram after you reply.'
       : replyTo
       ? `The user is replying to this specific passage:\n"""${replyTo.slice(0, 500)}"""\nRespond to that passage.`
       : isNew
         ? 'The user just asked a question. Answer it now if you can. Ask a clarification only if you truly cannot.'
-        : target === 'both'
+        : audience === 'both'
           ? 'The user is speaking to both of you. Give succinct feedback on what they just said. Do not write another full answer.'
           : `The user is speaking only to ${addressed}. Respond to what they just said.`
     const isOpening = isNew && !replyTo
-    const isBothFeedback = !isOpening && target === 'both' && !replyTo
+    const isBothFeedback = !isOpening && audience === 'both' && !replyTo && !wantsDiagram
     const shape = isOpening ? `${OPENING_LENGTH}\n\n${SHAPE}` : isBothFeedback ? BOTH_FEEDBACK : SHAPE
 
     try {
       const ids = await runVoices({
         voices,
-        phase: 'advice',
+        phase: brainstormVoice(priorMessages) && !endBrainstorm ? 'brainstorm' : 'advice',
         priorMessages,
         userMessage,
         maxTokens: wantsDiagram || isOpening ? 480 : isBothFeedback ? 200 : undefined,
         instructionFor: (voiceType) => `${lead}\n\n${shape}\n\n${stanceFor(voiceType, framework)}`,
       })
       if (wantsDiagram && ids) {
-        await Promise.all(['ethos', 'ego'].map((voice) => fetchDiagramRef.current(ids[voice], {
+        await Promise.all(voices.map((voice) => fetchDiagramRef.current(ids[voice], {
           voice,
           framework: DIAGRAM_FRAMEWORK[voice],
           summary: trimmed,
@@ -583,15 +586,17 @@ export function useChat() {
     const voiceType = voice === 'ego' ? 'ego' : 'ethos'
     const catalog = voiceType === 'ego' ? egoFrameworks : ethosFrameworks
     const tool = catalog.find((item) => item.name === route.framework)
+    const lastUser = [...state.messages].reverse().find((message) => message.type === 'user' && String(message.text || '').trim())
     const instruction = session?.collect
       ? [
-        'The user is brainstorming this conversation. Use the full history above.',
+        'Continue this conversation from where it already is. Do not start over and do not repeat your last answer.',
+        lastUser ? `The user left off here: """${String(lastUser.text).slice(0, 700)}"""` : '',
         `You will use ${route.framework} once you know enough. Do not run it yet.`,
-        'Begin by collecting information. Ask one question that opens the work.',
-        'Two short sentences. Ordinary language. No list. No diagram. No tool call in the reply.',
+        tool?.asks ? `The detail you still need is in this direction: ${tool.asks}` : 'Ask for the one detail you still need before brainstorming can begin.',
+        'Write two short sentences. The second sentence is one question that asks for that missing detail. Ordinary language. No list. No diagram. No tool call.',
         'Your very first line must be exactly:',
         'MODE:answer',
-      ].join('\n')
+      ].filter(Boolean).join('\n')
       : [
       'The user is brainstorming this conversation. Use the full history above.',
       `Run this framework: ${route.framework}.`,
@@ -623,13 +628,15 @@ export function useChat() {
         phase: 'brainstorm',
         priorMessages: state.messages,
         userMessage: null,
-        maxTokens: 1400,
-        diagram: true,
+        maxTokens: session?.collect ? 320 : 1400,
+        diagram: !session?.collect,
         c2: session?.c2,
         onDiagram: (event) => events.push(event),
+        emptyFallback: session?.collect ? 'Before we brainstorm, what is the one detail I still need from you?' : '',
         instructionFor: () => instruction,
       })
       const msgId = ids?.[voiceType]
+      if (session?.collect) return
       const hints = events.find((event) => event.type === 'hints')?.hints
       const specEvent = events.find((event) => event.type === 'spec')
       const fallbackEvent = events.find((event) => event.type === 'fallback')

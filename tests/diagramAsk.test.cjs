@@ -1,10 +1,12 @@
 let asksForDiagram
 let fullWidthMessageIds
+let brainstormVoice
+let voicesForReply
 let profileReady
 let itemsFor
 
 beforeAll(async () => {
-  ;({ asksForDiagram, fullWidthMessageIds } = await import('../src/utils/conversationView.js'))
+  ;({ asksForDiagram, fullWidthMessageIds, brainstormVoice, voicesForReply } = await import('../src/utils/conversationView.js'))
   ;({ profileReady } = await import('../src/brainstorm/profile.js'))
   ;({ itemsFor } = await import('../src/brainstorm/items.js'))
 })
@@ -40,4 +42,18 @@ test('a brainstorm voice fills the page until the user responds to both', () => 
   expect(wide.has('b2')).toBe(true)
   expect(wide.has('e3')).toBe(false)
   expect(wide.has('g3')).toBe(false)
+})
+
+test('a brainstorm stays with the chosen voice until the user responds to both', () => {
+  const during = [
+    { id: 'u1', type: 'user', audience: 'both', text: 'Start' },
+    { id: 'b1', type: 'ego', phase: 'brainstorm', text: 'What should we collect?' },
+  ]
+  expect(brainstormVoice(during)).toBe('ego')
+  expect(voicesForReply(during, { target: 'ego' })).toEqual(['ego'])
+  expect(voicesForReply(during, { target: 'both' })).toEqual(['ego'])
+  expect(voicesForReply(during, { target: 'ethos' })).toEqual(['ego'])
+  expect(voicesForReply(during, { target: 'both', endBrainstorm: true })).toEqual(['ethos', 'ego'])
+  expect(voicesForReply([], { target: 'both' })).toEqual(['ethos', 'ego'])
+  expect(voicesForReply([], { target: 'ethos' })).toEqual(['ethos'])
 })

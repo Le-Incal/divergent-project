@@ -66,7 +66,7 @@ function App() {
           <div className="appSection">
             <ChatThread
               onReplyToVoice={(voice, text, replyTo) => sendMessage(text, { target: voice, replyTo })}
-              onReplyToBoth={(text) => sendMessage(text, { target: 'both' })}
+              onReplyToBoth={(text) => sendMessage(text, { target: 'both', endBrainstorm: true })}
               onDebate={startDebate}
               onElaborate={startElaborate}
               onRegenerate={regenerateMessage}

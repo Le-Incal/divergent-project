@@ -57,6 +57,7 @@ export default function DiagramCanvas({ spec }) {
 
   useEffect(() => {
     let cancelled = false
+    setError('')
     layOut(spec).then((next) => {
       if (!cancelled) setLayout(next)
     }).catch((err) => {

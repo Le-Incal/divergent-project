@@ -65,5 +65,5 @@ export function guessProblemType(text) {
 export function affinityNudge(label) {
   if (label === 'ego_leaning') return 'Ego is a natural fit. Ethos would start with what we have been avoiding.'
   if (label === 'ethos_leaning') return 'Ethos is a natural fit. Ego would start with the one move that changes everything.'
-  return 'Either voice can take this. Pick the one you want in the room.'
+  return 'Pick the Voice you want in the room.'
 }

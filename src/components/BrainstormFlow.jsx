@@ -110,11 +110,6 @@ export default function BrainstormFlow({ history = '', disabled, onStart }) {
     })
   }
 
-  const both = scores ? {
-    ethos: routeBrainstorm({ profile: scores, problemType, voice: 'ethos' }),
-    ego: routeBrainstorm({ profile: scores, problemType, voice: 'ego' }),
-  } : null
-
   return (
     <div className="brainstormPanel">
       {step === 'choose' && (
@@ -154,24 +149,13 @@ export default function BrainstormFlow({ history = '', disabled, onStart }) {
               </button>
             ))}
           </div>
-          <button type="button" className="chatDebateBtn" onClick={() => setStep('help')}>Continue</button>
-        </div>
-      )}
-
-      {step === 'help' && both && (
-        <div className="brainstormStep">
-          <p className="brainstormLead">How to help</p>
-          <p className="brainstormNote">
-            {answers.C1 || 'Balanced'} tone. {answers.C2 || 'Key points'} depth.
-            Ethos would use {both.ethos.framework}. Ego would use {both.ego.framework}.
-          </p>
-          <button type="button" className="chatDebateBtn" onClick={() => setStep('voice')}>Choose a voice</button>
+          <button type="button" className="chatDebateBtn" onClick={() => setStep('voice')}>Continue</button>
         </div>
       )}
 
       {step === 'voice' && (
         <div className="brainstormStep">
-          <p className="brainstormLead">{ready ? 'Your profile is saved. Who should start?' : affinityNudge(scores?.affinity?.label)}</p>
+          <p className="brainstormLead">{ready ? 'Pick the Voice you want in the room.' : affinityNudge(scores?.affinity?.label)}</p>
           <div className="brainstormChoices">
             <button type="button" className="brainstormChoice brainstormChoice--ethos" disabled={disabled} onClick={() => startVoice('ethos')}>Ethos</button>
             <button type="button" className="brainstormChoice brainstormChoice--ego" disabled={disabled} onClick={() => startVoice('ego')}>Ego</button>
