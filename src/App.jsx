@@ -1,19 +1,16 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useApp } from './context/AppContext'
+import { useChat } from './hooks/useChat'
 import Header from './components/Header'
 import ChatThread from './components/ChatThread'
-import InputArea from './components/InputArea'
+import { QuestionPrompt } from './components/InputArea'
 import LandingPage from './components/LandingPage'
 import SidePanel from './components/SidePanel'
-import VoiceFlowController from './components/VoiceFlowController'
-import { prefetchTTS } from './utils/tts'
-
-const WELCOME_TEXT = "Welcome to Divergent. What's on your mind?"
 
 function App() {
-  const { state, dispatch, setMode, getVoiceASpeakerVoiceId } = useApp()
-  const [panelOpen, setPanelOpen] = useState(false)
-  const [replyContext, setReplyContext] = useState(null)
+  const { state, dispatch, setMode } = useApp()
+  const { sendMessage, startDebate, startElaborate, regenerateMessage, startBrainstorm, acceptDiagramOffer, declineDiagramOffer } = useChat()
+  const [panelView, setPanelView] = useState(null)
 
   const [hasEntered, setHasEntered] = useState(() => {
     try {
@@ -34,9 +31,8 @@ function App() {
 
   const restartToLanding = () => {
     dispatch({ type: 'CLEAR_RESPONSES' })
-    setPanelOpen(false)
+    setPanelView(null)
     setMode('default')
-    setReplyContext(null)
     try {
       sessionStorage.removeItem('divergent-has-entered')
     } catch {
@@ -44,14 +40,6 @@ function App() {
     }
     setHasEntered(false)
   }
-
-  // Prefetch welcome TTS audio as soon as voice ID resolves (while still on landing page)
-  const hostVoiceId = getVoiceASpeakerVoiceId()
-  useEffect(() => {
-    if (!hasEntered && hostVoiceId) {
-      prefetchTTS(WELCOME_TEXT, hostVoiceId)
-    }
-  }, [hasEntered, hostVoiceId])
 
   if (!hasEntered) {
     return (
@@ -61,28 +49,44 @@ function App() {
     )
   }
 
+  const hasThread = (state.messages || []).some((m) => m.type === 'user' || m.type === 'ethos' || m.type === 'ego')
+
   return (
     <div className="min-h-screen appShell" data-mode={state.mode}>
-      <Header onOpenPanel={() => setPanelOpen(true)} onRestart={restartToLanding} />
+      <Header onRestart={restartToLanding} />
       <SidePanel
-        open={panelOpen}
-        onClose={() => setPanelOpen(false)}
+        open={panelView != null}
+        view={panelView || 'settings'}
+        onClose={() => setPanelView(null)}
         onNewChat={restartToLanding}
       />
 
-      <VoiceFlowController active={hasEntered && state.chatPhase === 'idle'} />
-
       <main className="appMain">
-        <div className="appSection">
-          <ChatThread
-            onReply={(blockText) => setReplyContext(blockText)}
-          />
-        </div>
-
-        <InputArea
-          replyContext={replyContext}
-          onClearReply={() => setReplyContext(null)}
-        />
+        {hasThread ? (
+          <div className="appSection">
+            <ChatThread
+              onReplyToVoice={(voice, text, replyTo) => sendMessage(text, { target: voice, replyTo })}
+              onReplyToBoth={(text) => sendMessage(text, { target: 'both' })}
+              onDebate={startDebate}
+              onElaborate={startElaborate}
+              onRegenerate={regenerateMessage}
+              onBrainstorm={startBrainstorm}
+              onDiagramAccept={acceptDiagramOffer}
+              onDiagramDecline={declineDiagramOffer}
+              onOpenHistory={() => setPanelView('history')}
+              onOpenSettings={() => setPanelView('settings')}
+            />
+          </div>
+        ) : (
+          <div className="questionStage">
+            <QuestionPrompt
+              disabled={state.isLoading}
+              onSubmit={(text) => sendMessage(text, { target: 'both' })}
+              onOpenHistory={() => setPanelView('history')}
+              onOpenSettings={() => setPanelView('settings')}
+            />
+          </div>
+        )}
       </main>
     </div>
   )

@@ -1,26 +1,9 @@
-import { useState } from 'react'
 import { useApp } from '../context/AppContext'
-import { playTTS } from '../utils/tts'
 
 export default function VoiceCard({ voice, type, response, isLoading }) {
-  const { dispatch, getVoiceAProvider, getVoiceBProvider, getVoiceASpeakerVoiceId, getVoiceBSpeakerVoiceId } = useApp()
-  const [isPlaying, setIsPlaying] = useState(false)
+  const { getVoiceAProvider, getVoiceBProvider } = useApp()
   const isLeftCard = type === 'challenger'
   const provider = isLeftCard ? getVoiceAProvider() : getVoiceBProvider()
-  const speakerVoiceId = isLeftCard ? getVoiceASpeakerVoiceId() : getVoiceBSpeakerVoiceId()
-
-  const handlePlay = async () => {
-    if (!response || !speakerVoiceId || isPlaying) return
-    setIsPlaying(true)
-    try {
-      await playTTS(response, speakerVoiceId)
-    } catch (e) {
-      console.error('TTS play error:', e)
-      dispatch({ type: 'SET_TTS_ERROR', payload: e?.message || 'TTS request failed. Check network.' })
-    } finally {
-      setIsPlaying(false)
-    }
-  }
 
   const formatText = (text) => {
     return text
@@ -42,23 +25,6 @@ export default function VoiceCard({ voice, type, response, isLoading }) {
 
         <div className="voiceCardMeta">
           <span className="voiceCardProvider">{provider?.name ?? ''}</span>
-          {response && speakerVoiceId && (
-            <button
-              type="button"
-              onClick={handlePlay}
-              disabled={isPlaying}
-              className="voiceCardPlay"
-              aria-label={isPlaying ? 'Playing…' : 'Play'}
-            >
-              {isPlaying ? (
-                <span className="voiceCardPlayText">…</span>
-              ) : (
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                  <path d="M8 5v14l11-7z" />
-                </svg>
-              )}
-            </button>
-          )}
         </div>
       </header>
       

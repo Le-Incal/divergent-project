@@ -87,7 +87,6 @@ ANTHROPIC_API_KEY=       # Claude
 OPENAI_API_KEY=          # GPT-4o
 GOOGLE_API_KEY=          # Gemini (or GOOGLE_AI_API_KEY in some docs)
 XAI_API_KEY=             # Grok
-ELEVENLABS_API_KEY=      # Optional, for TTS playback
 DEFAULT_PROVIDER=claude  # Which provider to use by default
 ```
 

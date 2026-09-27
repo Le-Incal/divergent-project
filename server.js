@@ -5,6 +5,7 @@ import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { createHash, timingSafeEqual } from 'crypto';
 import { resolveSystemPrompt, getResolutionPrompt } from './promptLoader.js';
+import { acceptDiagram, diagramTools } from './src/diagram/tool.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -12,40 +13,21 @@ const __dirname = dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+function chatTokenLimit(body) {
+  const requested = Number(body?.maxTokens);
+  const cap = body?.diagram ? 2048 : 1024;
+  if (!Number.isFinite(requested)) return body?.diagram ? 1400 : 1024;
+  return Math.min(cap, Math.max(80, Math.round(requested)));
+}
+
+function emitDiagramResult(res, voiceName, raw, body) {
+  const accepted = acceptDiagram(raw, { c2: body?.c2 });
+  if (accepted.type !== 'spec') return false;
+  res.write(`data: ${JSON.stringify({ diagram: { type: 'spec', spec: accepted.spec }, voice: voiceName })}\n\n`);
+  return true;
+}
+
 app.use(cors());
-
-// ElevenLabs Speech-to-Text: must be before express.json() so we receive raw audio body
-app.post('/api/stt', express.raw({ type: () => true, limit: '10mb' }), async (req, res) => {
-  try {
-    const apiKey = process.env.ELEVENLABS_API_KEY;
-    if (!apiKey) {
-      return res.status(503).json({ error: 'STT not configured: ELEVENLABS_API_KEY missing' });
-    }
-    if (!req.body || !Buffer.isBuffer(req.body) || req.body.length === 0) {
-      return res.status(400).json({ error: 'Missing or invalid audio body' });
-    }
-    const formData = new FormData();
-    formData.append('file', new Blob([req.body]), 'audio.webm');
-    formData.append('model_id', 'scribe_v2');
-    const response = await fetch('https://api.elevenlabs.io/v1/speech-to-text', {
-      method: 'POST',
-      headers: { 'xi-api-key': apiKey },
-      body: formData,
-    });
-    if (!response.ok) {
-      const errText = await response.text();
-      console.error('ElevenLabs STT error:', response.status, errText);
-      return res.status(response.status).json({ error: 'Transcription failed' });
-    }
-    const data = await response.json();
-    const text = data.text ?? (data.transcripts?.[0]?.text ?? '');
-    res.json({ text: text || '' });
-  } catch (error) {
-    console.error('STT handler error:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
 app.use(express.json());
 
 // Serve static files from the dist folder
@@ -94,6 +76,16 @@ app.post('/api/chat-claude', async (req, res) => {
       return res.status(400).json({ error: 'Missing systemPrompt or voice+mode' });
     }
 
+    const claudeBody = {
+      model: 'claude-sonnet-4-6',
+      max_tokens: chatTokenLimit(req.body),
+      stream: true,
+      system: systemPrompt,
+      messages: [{ role: 'user', content: message }],
+    };
+    if (req.body.diagram) claudeBody.tools = diagramTools();
+    if (req.body.diagramOnly) claudeBody.tool_choice = { type: 'tool', name: 'emit_diagram' };
+
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -101,13 +93,7 @@ app.post('/api/chat-claude', async (req, res) => {
         'x-api-key': process.env.ANTHROPIC_API_KEY,
         'anthropic-version': '2023-06-01',
       },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1024,
-        stream: true,
-        system: systemPrompt,
-        messages: [{ role: 'user', content: message }],
-      }),
+      body: JSON.stringify(claudeBody),
     });
 
     if (!response.ok) {
@@ -123,6 +109,8 @@ app.post('/api/chat-claude', async (req, res) => {
 
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
+    const toolBlocks = new Map();
+    let invalidDiagram = null;
 
     try {
       while (true) {
@@ -139,6 +127,31 @@ app.post('/api/chat-claude', async (req, res) => {
 
             try {
               const parsed = JSON.parse(data);
+              if (parsed.type === 'content_block_start' && parsed.content_block?.type === 'tool_use') {
+                toolBlocks.set(parsed.index, { name: parsed.content_block.name, json: '' });
+              }
+              if (parsed.type === 'content_block_delta' && parsed.delta?.type === 'input_json_delta') {
+                const block = toolBlocks.get(parsed.index);
+                if (block) block.json += parsed.delta.partial_json || '';
+              }
+              if (parsed.type === 'content_block_stop') {
+                const block = toolBlocks.get(parsed.index);
+                if (block) {
+                  let input = null;
+                  try { input = JSON.parse(block.json); } catch { input = null; }
+                  if (block.name === 'emit_structure_hints' && input) {
+                    res.write(`data: ${JSON.stringify({ diagram: { type: 'hints', hints: input }, voice: voiceName })}\n\n`);
+                  }
+                  if (block.name === 'emit_diagram') {
+                    const accepted = acceptDiagram(input, { c2: req.body.c2 });
+                    if (accepted.type === 'spec') {
+                      res.write(`data: ${JSON.stringify({ diagram: { type: 'spec', spec: accepted.spec }, voice: voiceName })}\n\n`);
+                    } else {
+                      invalidDiagram = accepted;
+                    }
+                  }
+                }
+              }
               if (parsed.type === 'content_block_delta') {
                 const text = parsed.delta?.text || '';
                 if (text) {
@@ -153,6 +166,45 @@ app.post('/api/chat-claude', async (req, res) => {
       }
     } catch (error) {
       console.error('Stream error:', error);
+    }
+
+    if (invalidDiagram && req.body.diagram) {
+      try {
+        const retry = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': process.env.ANTHROPIC_API_KEY,
+            'anthropic-version': '2023-06-01',
+          },
+          body: JSON.stringify({
+            model: 'claude-sonnet-4-6',
+            max_tokens: 1400,
+            system: systemPrompt,
+            tools: diagramTools(),
+            tool_choice: { type: 'tool', name: 'emit_diagram' },
+            messages: [{
+              role: 'user',
+              content: `${message}\n\nThe diagram was invalid (${invalidDiagram.issues.join(', ')}). Call emit_diagram again with a corrected spec and no coordinates.`,
+            }],
+          }),
+        });
+        if (retry.ok) {
+          const data = await retry.json();
+          const tool = (data.content || []).find((block) => block.type === 'tool_use' && block.name === 'emit_diagram');
+          if (tool?.input && emitDiagramResult(res, voiceName, tool.input, req.body)) {
+            invalidDiagram = null;
+          }
+        }
+      } catch (error) {
+        console.error('Diagram retry error:', error);
+      }
+      if (invalidDiagram) {
+        res.write(`data: ${JSON.stringify({
+          diagram: { type: 'fallback', outline: invalidDiagram.outline, reason: invalidDiagram.issues.join(', ') },
+          voice: voiceName,
+        })}\n\n`);
+      }
     }
 
     res.write('data: [DONE]\n\n');
@@ -185,7 +237,7 @@ app.post('/api/chat-openai', async (req, res) => {
           { role: 'system', content: systemPrompt },
           { role: 'user', content: message },
         ],
-        max_tokens: 1024,
+        max_tokens: chatTokenLimit(req.body),
       }),
     });
 
@@ -256,7 +308,7 @@ app.post('/api/chat-gemini', async (req, res) => {
         body: JSON.stringify({
           contents: [{ role: 'user', parts: [{ text: message }] }],
           systemInstruction: { parts: [{ text: systemPrompt }] },
-          generationConfig: { maxOutputTokens: 1024, temperature: 0.8 },
+          generationConfig: { maxOutputTokens: chatTokenLimit(req.body), temperature: 0.8 },
         }),
       }
     );
@@ -332,7 +384,7 @@ app.post('/api/chat-grok', async (req, res) => {
           { role: 'system', content: systemPrompt },
           { role: 'user', content: message },
         ],
-        max_tokens: 1024,
+        max_tokens: chatTokenLimit(req.body),
       }),
     });
 
@@ -420,7 +472,7 @@ ${conversationHistory.map((m) => `${m.name || m.speaker}: ${m.text}`).join('\n')
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-6',
         max_tokens: 1024,
         system: resolutionPrompt,
         messages: [{ role: 'user', content: contextBlock }],
@@ -442,79 +494,6 @@ ${conversationHistory.map((m) => `${m.name || m.speaker}: ${m.text}`).join('\n')
   }
 });
 
-// ElevenLabs voice discovery: list available voices so the frontend can auto-configure
-app.get('/api/voices', async (req, res) => {
-  try {
-    const apiKey = process.env.ELEVENLABS_API_KEY;
-    if (!apiKey) {
-      return res.status(503).json({ error: 'ELEVENLABS_API_KEY not configured', voices: [] });
-    }
-    const response = await fetch('https://api.elevenlabs.io/v1/voices', {
-      headers: { 'xi-api-key': apiKey },
-    });
-    if (!response.ok) {
-      const errText = await response.text();
-      console.error('ElevenLabs voices error:', response.status, errText);
-      return res.status(response.status).json({ error: 'Failed to fetch voices', voices: [] });
-    }
-    const data = await response.json();
-    const voices = (data.voices || []).map((v) => ({
-      voiceId: v.voice_id,
-      name: v.name,
-      gender: v.labels?.gender || null,
-      accent: v.labels?.accent || null,
-      age: v.labels?.age || null,
-      category: v.category || null,
-    }));
-    res.json({ voices });
-  } catch (error) {
-    console.error('Voices handler error:', error);
-    res.status(500).json({ error: 'Internal server error', voices: [] });
-  }
-});
-
-// ElevenLabs TTS proxy (keeps API key server-side)
-app.post('/api/tts', async (req, res) => {
-  try {
-    const { text, voiceId } = req.body;
-    const apiKey = process.env.ELEVENLABS_API_KEY;
-
-    if (!apiKey) {
-      return res.status(503).json({ error: 'TTS not configured: ELEVENLABS_API_KEY missing' });
-    }
-    if (!text || typeof text !== 'string' || !voiceId || typeof voiceId !== 'string') {
-      return res.status(400).json({ error: 'Missing or invalid text or voiceId' });
-    }
-
-    const url = `https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(voiceId)}`;
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'xi-api-key': apiKey,
-        Accept: 'audio/mpeg',
-      },
-      body: JSON.stringify({
-        text: text.slice(0, 5000), // ElevenLabs limits text length
-        model_id: 'eleven_multilingual_v2',
-      }),
-    });
-
-    if (!response.ok) {
-      const errText = await response.text();
-      console.error('ElevenLabs TTS error:', response.status, errText);
-      return res.status(response.status).json({ error: 'TTS request failed' });
-    }
-
-    const buffer = await response.arrayBuffer();
-    res.setHeader('Content-Type', 'audio/mpeg');
-    res.send(Buffer.from(buffer));
-  } catch (error) {
-    console.error('TTS handler error:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
 // Fallback to index.html for SPA routing
 app.get('*', (req, res) => {
   res.sendFile(join(__dirname, 'dist', 'index.html'));
@@ -526,10 +505,5 @@ app.listen(PORT, () => {
     console.log('Access gate: SITE_PASSWORD configured');
   } else {
     console.warn('Access gate: SITE_PASSWORD not set - nobody can pass the Coming Soon screen');
-  }
-  if (process.env.ELEVENLABS_API_KEY) {
-    console.log('ElevenLabs: API key configured (STT + TTS)');
-  } else {
-    console.log('ElevenLabs: no API key (set ELEVENLABS_API_KEY for voice input/output)');
   }
 });

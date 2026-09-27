@@ -25,7 +25,7 @@ export const PROVIDERS = {
   claude: {
     id: 'claude',
     name: 'Claude',
-    model: 'claude-sonnet-4-20250514',
+    model: 'claude-sonnet-4-6',
     endpoint: '/api/chat-claude',
     color: '#D97757',
   },
@@ -54,13 +54,6 @@ export const PROVIDERS = {
 
 export const DEFAULT_MODE_PROVIDERS = ['claude', 'openai', 'gemini', 'grok']
 export const SANDPIT_PROVIDERS = ['claude', 'openai', 'gemini', 'grok']
-
-// ElevenLabs speaker voices. Get voice IDs from elevenlabs.io → Voice Library; paste into voiceId.
-// Settings → Speakers uses these for Ethos (Voice A) and Ego (Voice B). Play buttons use ELEVENLABS_API_KEY.
-export const VOICES = [
-  { id: 'male-1', name: 'James', voiceId: 'REPLACE_WITH_ELEVENLABS_VOICE_ID', gender: 'male' },
-  { id: 'female-1', name: 'Sarah', voiceId: 'REPLACE_WITH_ELEVENLABS_VOICE_ID', gender: 'female' },
-]
 
 // Voice frameworks configuration
 // Ethos vs Ego is the primary default; Unique Personas are optional focused pairs.
@@ -213,11 +206,6 @@ const initialState = {
   activeFramework: 'ethos-ego',
   voiceAProvider: 'claude',
   voiceBProvider: 'claude',
-  voiceAVoiceId: VOICES[0]?.id ?? 'male-1',
-  voiceBVoiceId: VOICES[1]?.id ?? 'female-1',
-  availableVoices: [], // populated from /api/voices on mount
-  ttsError: null, // transient error when TTS play fails (e.g. network)
-  debateOverlap: 50,
   userInput: '',
   isLoading: false,
   // Legacy fields kept for side panel / resolution
@@ -236,8 +224,6 @@ const initialState = {
   clarificationRound: 0,
   chatHistories: [],
   activeChatId: null,
-  // Voice flow (welcome → listen → confirm → Ethos/Ego)
-  voiceFlowStage: 'idle', // 'idle' | 'greeting' | 'listening' | 'transcribing' | 'confirming' | 'processing'
   // Phase 3: Exchange-level state (O-1 round management)
   exchangeStatus: 'pending', // 'pending' | 'active' | 'resolved' | 'archived'
   exchangeRound: 0,
@@ -279,37 +265,6 @@ const reducer = (state, action) => {
       return { ...state, voiceAProvider: action.payload }
     case 'SET_VOICE_B_PROVIDER':
       return { ...state, voiceBProvider: action.payload }
-    case 'SET_VOICE_A_VOICE':
-      return { ...state, voiceAVoiceId: action.payload }
-    case 'SET_VOICE_B_VOICE':
-      return { ...state, voiceBVoiceId: action.payload }
-    case 'SET_AVAILABLE_VOICES': {
-      const voices = action.payload || []
-      const updates = { availableVoices: voices }
-      if (voices.length > 0) {
-        // Auto-assign if current IDs point to placeholder entries
-        const curA = VOICES.find((v) => v.id === state.voiceAVoiceId)
-        const curB = VOICES.find((v) => v.id === state.voiceBVoiceId)
-        const needsA = !curA || curA.voiceId.startsWith('REPLACE_')
-        const needsB = !curB || curB.voiceId.startsWith('REPLACE_')
-        if (needsA) {
-          const male = voices.find((v) => v.gender === 'male')
-          updates.voiceAVoiceId = (male || voices[0]).voiceId
-        }
-        if (needsB) {
-          const aId = updates.voiceAVoiceId || state.voiceAVoiceId
-          const female = voices.find((v) => v.gender === 'female' && v.voiceId !== aId)
-          updates.voiceBVoiceId = (female || voices[1] || voices[0]).voiceId
-        }
-      }
-      return { ...state, ...updates }
-    }
-    case 'SET_DEBATE_OVERLAP':
-      return { ...state, debateOverlap: Math.min(100, Math.max(0, Number(action.payload))) }
-    case 'SET_TTS_ERROR':
-      return { ...state, ttsError: action.payload ?? null }
-    case 'CLEAR_TTS_ERROR':
-      return { ...state, ttsError: null }
     case 'SET_USER_INPUT':
       return applyActiveChatPatch(
         { ...state, userInput: action.payload },
@@ -336,17 +291,46 @@ const reducer = (state, action) => {
       return applyActiveChatPatch({ ...state, messages: next }, { messages: next })
     }
     case 'UPDATE_MESSAGE_TEXT': {
-      const { id, text } = action.payload || {}
-      const next = state.messages.map(m => m.id === id ? { ...m, text: text ?? '' } : m)
+      const { id, text, responseKind, phase } = action.payload || {}
+      const next = state.messages.map(m => {
+        if (m.id !== id) return m
+        return {
+          ...m,
+          ...(text !== undefined ? { text: text ?? '' } : {}),
+          ...(responseKind !== undefined ? { responseKind } : {}),
+          ...(phase !== undefined ? { phase } : {}),
+        }
+      })
       return applyActiveChatPatch({ ...state, messages: next }, { messages: next })
     }
     case 'SET_MESSAGE_STREAMING': {
       const { id, isStreaming } = action.payload || {}
       const next = state.messages.map(m => m.id === id ? { ...m, isStreaming } : m)
-      return { ...state, messages: next }
+      return applyActiveChatPatch({ ...state, messages: next }, { messages: next })
     }
-    case 'SET_VOICE_FLOW_STAGE':
-      return { ...state, voiceFlowStage: action.payload }
+    case 'SET_MESSAGE_DIAGRAM': {
+      const { id, spec, offer, outline } = action.payload || {}
+      const next = state.messages.map((message) => (
+        message.id === id
+          ? {
+            ...message,
+            ...(spec !== undefined ? { diagramSpec: spec } : {}),
+            ...(offer !== undefined ? { diagramOffer: offer } : {}),
+            ...(outline !== undefined ? { diagramOutline: outline } : {}),
+          }
+          : message
+      ))
+      return applyActiveChatPatch({ ...state, messages: next }, { messages: next })
+    }
+    case 'SET_MESSAGE_REPLAY': {
+      const { id, turnId, replay } = action.payload || {}
+      const next = state.messages.map(m => (
+        m.id === id
+          ? { ...m, ...(turnId ? { turnId } : {}), ...(replay ? { replay } : {}) }
+          : m
+      ))
+      return applyActiveChatPatch({ ...state, messages: next }, { messages: next })
+    }
     case 'REMOVE_MESSAGE': {
       const rmId = action.payload
       const nextMsgs = state.messages.filter((m) => m.id !== rmId)
@@ -396,7 +380,6 @@ const reducer = (state, action) => {
         selectedBranch: null,
         resolutionText: null,
         activeChatId: null,
-        voiceFlowStage: 'idle',
         exchangeStatus: 'pending',
         exchangeRound: 0,
         exchangeHistory: [],
@@ -526,18 +509,6 @@ export function AppProvider({ children }) {
     }
   }, [state.chatHistories])
 
-  // Fetch available ElevenLabs voices on mount; auto-assigns if current IDs are placeholders
-  useEffect(() => {
-    fetch('/api/voices')
-      .then((res) => (res.ok ? res.json() : { voices: [] }))
-      .then((data) => {
-        if (data.voices?.length) {
-          dispatch({ type: 'SET_AVAILABLE_VOICES', payload: data.voices })
-        }
-      })
-      .catch(() => {})
-  }, [])
-  
   const getActiveFramework = () => {
     const fw = FRAMEWORKS[state.activeFramework]
     if (!fw) return fw
@@ -554,34 +525,18 @@ export function AppProvider({ children }) {
     }
   }
 
-  const getSpeakerVoiceId = (voiceKey) => {
-    const id = voiceKey === 'A' ? state.voiceAVoiceId : state.voiceBVoiceId
-    // Check if it's a direct ElevenLabs voice ID (from auto-discovery)
-    if (state.availableVoices?.some((v) => v.voiceId === id)) return id
-    // Legacy: check static VOICES array
-    const voice = VOICES.find((v) => v.id === id)
-    const voiceId = voice?.voiceId ?? null
-    if (!voiceId || voiceId.startsWith('REPLACE_')) return null
-    return voiceId
-  }
-
   const value = {
     state,
     dispatch,
     getActiveFramework,
     getVoiceAProvider: () => PROVIDERS[state.voiceAProvider],
     getVoiceBProvider: () => PROVIDERS[state.voiceBProvider],
-    getVoiceASpeakerVoiceId: () => getSpeakerVoiceId('A'),
-    getVoiceBSpeakerVoiceId: () => getSpeakerVoiceId('B'),
     toggleSidebar: () => dispatch({ type: 'TOGGLE_SIDEBAR' }),
     setMode: (mode) => dispatch({ type: 'SET_MODE', payload: mode }),
     setFramework: (id) => dispatch({ type: 'SET_FRAMEWORK', payload: id }),
     setUserInput: (input) => dispatch({ type: 'SET_USER_INPUT', payload: input }),
     setVoiceAProvider: (id) => dispatch({ type: 'SET_VOICE_A_PROVIDER', payload: id }),
     setVoiceBProvider: (id) => dispatch({ type: 'SET_VOICE_B_PROVIDER', payload: id }),
-    setVoiceAVoice: (id) => dispatch({ type: 'SET_VOICE_A_VOICE', payload: id }),
-    setVoiceBVoice: (id) => dispatch({ type: 'SET_VOICE_B_VOICE', payload: id }),
-    setDebateOverlap: (value) => dispatch({ type: 'SET_DEBATE_OVERLAP', payload: value }),
     setSelectedBranch: (branch) => dispatch({ type: 'SET_SELECTED_BRANCH', payload: branch }),
     setResolution: (text) => dispatch({ type: 'SET_RESOLUTION', payload: text }),
     startNewChat: (title, userInput) => dispatch({ type: 'START_NEW_CHAT', payload: { title, userInput } }),

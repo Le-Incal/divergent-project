@@ -1,12 +1,9 @@
-import { useState } from 'react'
 import { useApp } from '../context/AppContext'
 import { useChat } from '../hooks/useChat'
-import { playDebateAudio } from '../utils/playDebateAudio'
 
 export default function DebateCard() {
-  const { state, setSelectedBranch, getActiveFramework, getVoiceASpeakerVoiceId, getVoiceBSpeakerVoiceId } = useApp()
+  const { state, setSelectedBranch, getActiveFramework } = useApp()
   const { continueDebate, fetchResolution, isResolving } = useChat()
-  const [isPlayingDebate, setIsPlayingDebate] = useState(false)
   const framework = getActiveFramework()
 
   const maxRounds = state.mode === 'sandpit' ? 5 : 3
@@ -14,26 +11,7 @@ export default function DebateCard() {
   const atRoundLimit = currentRounds >= maxRounds
   
   const hasRealResponses = !!(state.voiceAResponse || state.voiceBResponse)
-  const canPlayDebate = (state.voiceAResponse || state.voiceBResponse) && (getVoiceASpeakerVoiceId() || getVoiceBSpeakerVoiceId())
 
-  const handlePlayDebate = async () => {
-    if (!canPlayDebate || isPlayingDebate) return
-    setIsPlayingDebate(true)
-    try {
-      await playDebateAudio(
-        state.voiceAResponse ?? '',
-        state.voiceBResponse ?? '',
-        getVoiceASpeakerVoiceId(),
-        getVoiceBSpeakerVoiceId(),
-        state.debateOverlap
-      )
-    } catch (e) {
-      console.error('Play debate error:', e)
-    } finally {
-      setIsPlayingDebate(false)
-    }
-  }
-  
   const debateContent = state.debateMessages
   
   return (
@@ -71,11 +49,6 @@ export default function DebateCard() {
         )}
 
         <div className="debateActions">
-          {canPlayDebate && (
-            <button type="button" className="btn btn-secondary" onClick={handlePlayDebate} disabled={isPlayingDebate}>
-              {isPlayingDebate ? 'Playing…' : 'Play debate'}
-            </button>
-          )}
           <button type="button" className="btn btn-secondary" onClick={() => setSelectedBranch('ethos')}>
             Follow {framework?.voiceA?.name}
           </button>

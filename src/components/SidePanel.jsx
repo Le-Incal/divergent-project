@@ -1,17 +1,15 @@
 import { useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { useApp, FRAMEWORKS, PROVIDERS, VOICES } from '../context/AppContext'
+import { useApp, FRAMEWORKS, PROVIDERS } from '../context/AppContext'
 
 const TABS = [
-  { id: 'history', label: 'History' },
   { id: 'voices', label: 'Voices' },
-  { id: 'settings', label: 'Settings' },
+  { id: 'settings', label: 'AI Modalities' },
 ]
 
-export default function SidePanel({ open, onClose, onNewChat }) {
+export default function SidePanel({ open, onClose, onNewChat, view = 'settings' }) {
   const {
     state,
-    dispatch,
     loadChat,
     deleteChat,
     deleteAllChats,
@@ -19,9 +17,6 @@ export default function SidePanel({ open, onClose, onNewChat }) {
     setFramework,
     setVoiceAProvider,
     setVoiceBProvider,
-    setVoiceAVoice,
-    setVoiceBVoice,
-    setDebateOverlap,
     getActiveFramework,
   } = useApp()
 
@@ -31,7 +26,7 @@ export default function SidePanel({ open, onClose, onNewChat }) {
   const voiceALabel = framework?.voiceA?.name ?? 'Voice A'
   const voiceBLabel = framework?.voiceB?.name ?? 'Voice B'
 
-  const [activeTab, setActiveTab] = useState('history')
+  const [activeTab, setActiveTab] = useState('voices')
 
   const frameworks = useMemo(() => Object.values(FRAMEWORKS), [])
   const providers = useMemo(() => Object.values(PROVIDERS), [])
@@ -43,31 +38,33 @@ export default function SidePanel({ open, onClose, onNewChat }) {
   return createPortal(
     <>
       <button type="button" className="panelBackdrop" onClick={onClose} aria-label="Close panel" />
-      <aside className="panel" role="dialog" aria-label="Settings" data-mode={state.mode}>
+      <aside className="panel" role="dialog" aria-label={view === 'history' ? 'History' : 'Settings'} data-mode={state.mode}>
         <div className="panelHeader">
-          <div className="panelTitle">Settings</div>
+          <div className="panelTitle">{view === 'history' ? 'History' : 'Settings'}</div>
           <button type="button" className="btn btn-secondary" onClick={onClose}>
             Close
           </button>
         </div>
 
-        <div className="panelTabs" role="tablist" aria-label="Settings tabs">
-          {TABS.map((t) => (
-            <button
-              key={t.id}
-              type="button"
-              role="tab"
-              aria-selected={activeTab === t.id}
-              className={`panelTab ${activeTab === t.id ? 'isActive' : ''}`}
-              onClick={() => setActiveTab(t.id)}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
+        {view === 'settings' && (
+          <div className="panelTabs" role="tablist" aria-label="Settings tabs">
+            {TABS.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                role="tab"
+                aria-selected={activeTab === t.id}
+                className={`panelTab ${activeTab === t.id ? 'isActive' : ''}`}
+                onClick={() => setActiveTab(t.id)}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+        )}
 
         <div className="panelBody">
-          {activeTab === 'history' && (
+          {view === 'history' && (
             <div className="panelSection">
               <div className="panelSectionLabel">Chat histories</div>
               {histories.length === 0 ? (
@@ -140,7 +137,7 @@ export default function SidePanel({ open, onClose, onNewChat }) {
             </div>
           )}
 
-          {activeTab === 'voices' && (
+          {view === 'settings' && activeTab === 'voices' && (
             <div className="panelSection">
               <div className="panelSectionLabel">Unique voice selection</div>
               <div className="panelTagGrid">
@@ -159,7 +156,7 @@ export default function SidePanel({ open, onClose, onNewChat }) {
             </div>
           )}
 
-          {activeTab === 'settings' && (
+          {view === 'settings' && activeTab === 'settings' && (
             <>
               <div className="panelSection">
                 <div className="panelSectionLabel">Mode</div>
@@ -207,84 +204,6 @@ export default function SidePanel({ open, onClose, onNewChat }) {
                 </div>
               </div>
 
-              <div className="panelSection">
-                <div className="panelSectionLabel">Speakers (TTS)</div>
-                {(() => {
-                  const voiceOptions = state.availableVoices?.length
-                    ? state.availableVoices.map((v) => ({ key: v.voiceId, value: v.voiceId, label: v.name }))
-                    : VOICES.map((v) => ({ key: v.id, value: v.id, label: v.name }))
-                  const ttsConfigured =
-                    (state.availableVoices?.length ?? 0) > 0 &&
-                    !String(state.voiceAVoiceId ?? '').startsWith('REPLACE_') &&
-                    !String(state.voiceBVoiceId ?? '').startsWith('REPLACE_')
-                  return (
-                    <>
-                      <div className="panelFormGrid">
-                        <div className="panelField">
-                          <label className="panelFieldLabel">{voiceALabel}</label>
-                          <select className="panelSelect" value={state.voiceAVoiceId} onChange={(e) => setVoiceAVoice(e.target.value)}>
-                            {voiceOptions.map((v) => (
-                              <option key={v.key} value={v.value}>
-                                {v.label}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        <div className="panelField">
-                          <label className="panelFieldLabel">{voiceBLabel}</label>
-                          <select className="panelSelect" value={state.voiceBVoiceId} onChange={(e) => setVoiceBVoice(e.target.value)}>
-                            {voiceOptions.map((v) => (
-                              <option key={v.key} value={v.value}>
-                                {v.label}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      </div>
-                      <p className="panelTtsStatus" role="status" aria-live="polite">
-                        {ttsConfigured
-                          ? 'TTS: ready'
-                          : 'TTS: not configured. Set ELEVENLABS_API_KEY and add voice IDs in Settings to enable.'}
-                      </p>
-                      {!ttsConfigured && (
-                        <p className="panelTtsHelp" title="Speech uses ElevenLabs. Set ELEVENLABS_API_KEY and add voice IDs from elevenlabs.io to enable.">
-                          Speech uses ElevenLabs. Set ELEVENLABS_API_KEY and add voice IDs from elevenlabs.io to enable.
-                        </p>
-                      )}
-                      {state.ttsError && (
-                        <p className="panelTtsError" role="alert">
-                          {state.ttsError}
-                          <button
-                            type="button"
-                            className="panelTtsErrorDismiss"
-                            onClick={() => dispatch({ type: 'CLEAR_TTS_ERROR' })}
-                            aria-label="Dismiss"
-                          >
-                            ×
-                          </button>
-                        </p>
-                      )}
-                    </>
-                  )
-                })()}
-              </div>
-
-              <div className="panelSection">
-                <div className="panelSectionLabel">Debate overlap</div>
-                <div className="panelRangeRow">
-                  <span className="panelRangeLabel">Turn-taking</span>
-                  <input
-                    className="panelRange"
-                    type="range"
-                    min={0}
-                    max={100}
-                    value={state.debateOverlap}
-                    onChange={(e) => setDebateOverlap(Number(e.target.value))}
-                    aria-label="Debate overlap from turn-taking to both at once"
-                  />
-                  <span className="panelRangeLabel">Both at once</span>
-                </div>
-              </div>
             </>
           )}
         </div>
