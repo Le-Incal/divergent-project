@@ -229,7 +229,7 @@ export default function LandingPage({ onEnter }) {
                   </form>
                 ) : (
                   <button type="button" className="btn btn-primary" onClick={() => setUnlockOpen(true)}>
-                    Coming Soon
+                    Enter site
                   </button>
                 )}
                 {error ? <p className="landingUnlockError" role="alert">{error}</p> : null}
