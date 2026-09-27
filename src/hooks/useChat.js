@@ -64,52 +64,42 @@ const streamSseToText = async ({ endpoint, body, onTextDelta, onDiagram }) => {
   return fullText
 }
 
-const OFFER = [
-  'If you used MODE:answer, close with one short paragraph that is yours alone.',
-  'Offer the next step you would take, and how you specifically can help, from your own worldview.',
-  'Invite them to continue with you.',
-  'Your offer must be different from the other voice. Do not list a menu of options.',
-].join('\n')
-
-const SCAN = [
-  'If MODE:answer, write the reply in Markdown, so it can be scanned like a resume and then read.',
-  'Start with a Markdown list of two or three items. Begin each item with "- ". Bold only the claim, then a few plain words.',
-  'The list supports one recommendation. It is not a menu of options, and it is not a sequence that also includes the other path.',
-  'A reader who stops at the list should already know the single move you want, and should be able to tell it apart from the other voice\'s move.',
-  'Then a blank line, then Markdown paragraphs that develop those points for someone who wants more.',
-  'Do not write the key points as plain paragraphs. Do not use headings. Do not copy wording from these instructions.',
-].join('\n')
-
-const SHAPE = [
+const MODE_LINE = [
   'Your very first line must be exactly one of these two lines and nothing else:',
   'MODE:clarify',
   'MODE:answer',
   'Do not wrap that line in quotes, markdown, or punctuation.',
-  'Use MODE:clarify only when one missing fact stops you from giving a useful answer. Ask that single question, then stop. Do not add key points.',
-  'Use MODE:answer when you can respond. State your perspective directly.',
-  SCAN,
-  OFFER,
 ].join('\n')
 
-const OPENING_LENGTH = [
-  'This is the opening answer.',
-  'After the key points, one short paragraph is enough before the closing offer.',
-  'Stay under 150 words.',
+const BRIEF = [
+  'If MODE:answer, write Markdown and then stop.',
+  'Two items only. Each starts with "- ". Bold only the claim, then a few words.',
+  'One recommendation. Not a menu. Not both paths.',
+  'Then one sentence: the single next step you would take. No headings. No second paragraph.',
+].join('\n')
+
+const OPENING = [
+  'This is the opening answer. Stay under 70 words.',
+  MODE_LINE,
+  'Use MODE:clarify only when one missing fact stops you from giving a useful answer. Ask that single question, then stop.',
+  'Use MODE:answer when you can respond.',
+  BRIEF,
+].join('\n')
+
+const FOLLOW = [
+  'Stay under 55 words. Do not write another full answer.',
+  MODE_LINE,
+  'Use MODE:clarify only when one missing fact stops you from responding. Ask that single question, then stop.',
+  'Use MODE:answer when you can respond.',
+  BRIEF,
 ].join('\n')
 
 const BOTH_FEEDBACK = [
-  'The user just spoke to both of you. This is succinct feedback on what they just said, not a new essay.',
-  'Do not restate your earlier answer. React to their latest message.',
-  'Stay under 80 words.',
-  'Write it in Markdown. Start with a Markdown list of two items, each beginning with "- ", and bold the claim in each item.',
-  'Then one short paragraph: your reaction from your own path, and one next step. That paragraph is not a menu.',
-  'Do not add more paragraphs.',
-  'Your very first line must be exactly one of these two lines and nothing else:',
-  'MODE:clarify',
-  'MODE:answer',
-  'Do not wrap that line in quotes, markdown, or punctuation.',
-  'Use MODE:clarify only when one missing fact stops you from responding. Ask that single question, then stop.',
+  'The user just spoke to both of you. React to that message. Do not restate your earlier answer.',
+  'Stay under 45 words.',
+  MODE_LINE,
   'Use MODE:answer when you can respond.',
+  BRIEF,
 ].join('\n')
 
 const ETHOS_LEAN = [
@@ -132,17 +122,18 @@ const EGO_LEAN = [
   'Do not mention the other voice.',
 ].join('\n')
 
-function stanceFor(voiceType, framework) {
-  if (framework?.id === 'ethos-ego') return voiceType === 'ethos' ? ETHOS_LEAN : EGO_LEAN
-  const voice = voiceType === 'ethos' ? framework?.voiceA : framework?.voiceB
-  const other = voiceType === 'ethos' ? framework?.voiceB : framework?.voiceA
-  return [
-    `You are ${voice?.name}. ${voice?.role}.`,
-    `Recommend the path only ${voice?.name} would recommend.`,
-    `Do not give ${other?.name}'s advice in your own words.`,
-    `If ${other?.name} would sign your opening claims, those claims are wrong. Rewrite them until the paths actually diverge.`,
-    `Do not describe both paths and hand the choice back. Argue for yours. Do not mention ${other?.name}.`,
-  ].join('\n')
+function stanceFor(voiceType, framework, mode) {
+  const clash = mode === 'sandpit'
+    ? 'You are opponents. Reject the other path. Grant it no merit. Do not meet in the middle. If you would recommend the same next step, rewrite yours.'
+    : 'You are opponents. Recommend a different action from the other column. Do not share their framing, their value, or their next step. If they would sign your move, rewrite it.'
+  const lean = framework?.id === 'ethos-ego'
+    ? (voiceType === 'ethos' ? ETHOS_LEAN : EGO_LEAN)
+    : [
+      `You are ${voiceType === 'ethos' ? framework?.voiceA?.name : framework?.voiceB?.name}. ${voiceType === 'ethos' ? framework?.voiceA?.role : framework?.voiceB?.role}.`,
+      'Recommend only the path this voice would recommend. Do not give the other voice\'s advice in your own words.',
+      'Do not describe both paths and hand the choice back. Do not mention the other voice.',
+    ].join('\n')
+  return `${clash}\n${lean}`
 }
 
 function debateInstruction(otherName, otherText) {
@@ -151,15 +142,13 @@ function debateInstruction(otherName, otherText) {
     '"""',
     otherText,
     '"""',
-    `Respond to that answer. Reject the recommendation. Do not soften it, and do not meet in the middle.`,
-    'Hold your own path. Your move must not be a milder version of theirs. Do not repeat your previous answer.',
-    'This is a debate reply, not an essay. Write it in Markdown. Stay under 90 words.',
-    'Start with a Markdown list of two items, each beginning with "- ", and bold the claim in each item.',
-    'The first item is why their move fails on your terms. The second is the move you want instead.',
-    'Then one short paragraph: the next step and how you can help, and invite them to continue. That paragraph is not a menu.',
+    'Reject that recommendation. Do not soften it, and do not meet in the middle.',
+    'Stay under 55 words. Do not repeat your previous answer.',
+    'Two items only, each starting with "- ". Bold only the claim.',
+    'The first item is why their move fails on your terms. The second is your move instead.',
+    'Then one sentence: the next step. Stop.',
     'Your very first line must be exactly:',
     'MODE:answer',
-    'Do not ask a clarification question.',
   ].join('\n')
 }
 
@@ -169,13 +158,12 @@ function elaborateInstruction(ownText) {
     '"""',
     ownText,
     '"""',
-    'Expand on that first response. Go further into your own worldview and the path only you would recommend. Do not repeat it in the same words. Do not drift toward the other path. Do not answer the other voice.',
+    'Go one step deeper on your own path only. Do not repeat the first answer. Do not drift toward the other path.',
+    'Stay under 80 words.',
     'Your very first line must be exactly:',
     'MODE:answer',
-    'Do not ask a clarification question.',
-    'Open with a Markdown list of three items, each beginning with "- ", and bold the claim in each item.',
-    'Then a blank line, then three or four paragraphs that develop those points. That is where the narrative lives.',
-    OFFER,
+    'Two items only, each starting with "- ". Bold only the claim.',
+    'Then two sentences. Stop. No extra paragraphs.',
   ].join('\n')
 }
 
@@ -201,7 +189,7 @@ function priorFor(messages, message) {
   return messages.slice(0, start)
 }
 
-function adviceReplay(voiceType, framework, user, prior) {
+function adviceReplay(voiceType, framework, user, prior, mode) {
   const voiceAName = framework.voiceA.name
   const voiceBName = framework.voiceB.name
   const addressed = voiceType === 'ethos' ? voiceAName : voiceBName
@@ -218,14 +206,14 @@ function adviceReplay(voiceType, framework, user, prior) {
       : target === 'both'
         ? 'The user is speaking to both of you. Give succinct feedback on what they just said. Do not write another full answer.'
         : `The user is speaking only to ${addressed}. Respond to what they just said.`
-  const shape = isOpening ? `${OPENING_LENGTH}\n\n${SHAPE}` : isBothFeedback ? BOTH_FEEDBACK : SHAPE
+  const shape = isOpening ? OPENING : isBothFeedback ? BOTH_FEEDBACK : FOLLOW
   return {
-    instruction: `${lead}\n\n${shape}\n\n${stanceFor(voiceType, framework)}`,
-    maxTokens: isOpening ? 480 : isBothFeedback ? 200 : null,
+    instruction: `${lead}\n\n${shape}\n\n${stanceFor(voiceType, framework, mode)}`,
+    maxTokens: isOpening ? 220 : isBothFeedback ? 140 : 160,
   }
 }
 
-function replayFor(message, messages, framework) {
+function replayFor(message, messages, framework, mode) {
   if (message.replay?.instruction) {
     return { instruction: message.replay.instruction, maxTokens: message.replay.maxTokens || null }
   }
@@ -238,19 +226,19 @@ function replayFor(message, messages, framework) {
     const base = message.type === 'ethos'
       ? debateInstruction(framework.voiceB.name, ego.text)
       : debateInstruction(framework.voiceA.name, ethos.text)
-    return { instruction: `${base}\n\n${stanceFor(message.type, framework)}`, maxTokens: 180 }
+    return { instruction: `${base}\n\n${stanceFor(message.type, framework, mode)}`, maxTokens: 160 }
   }
   if (phase === 'elaborate') {
     const own = firstAnswer(prior, message.type)
     if (!own) return null
     return {
-      instruction: `${elaborateInstruction(own.text)}\n\n${stanceFor(message.type, framework)}`,
-      maxTokens: null,
+      instruction: `${elaborateInstruction(own.text)}\n\n${stanceFor(message.type, framework, mode)}`,
+      maxTokens: 240,
     }
   }
   const user = [...prior].reverse().find((m) => m.type === 'user')
   if (!user) return null
-  return adviceReplay(message.type, framework, user, prior)
+  return adviceReplay(message.type, framework, user, prior, mode)
 }
 
 export function useChat() {
@@ -432,7 +420,7 @@ export function useChat() {
           : `The user is speaking only to ${addressed}. Respond to what they just said.`
     const isOpening = isNew && !replyTo
     const isBothFeedback = !isOpening && audience === 'both' && !replyTo && !wantsDiagram
-    const shape = isOpening ? `${OPENING_LENGTH}\n\n${SHAPE}` : isBothFeedback ? BOTH_FEEDBACK : SHAPE
+    const shape = isOpening ? OPENING : isBothFeedback ? BOTH_FEEDBACK : FOLLOW
 
     try {
       const ids = await runVoices({
@@ -440,8 +428,8 @@ export function useChat() {
         phase: brainstormVoice(priorMessages) && !endBrainstorm ? 'brainstorm' : 'advice',
         priorMessages,
         userMessage,
-        maxTokens: wantsDiagram || isOpening ? 480 : isBothFeedback ? 200 : undefined,
-        instructionFor: (voiceType) => `${lead}\n\n${shape}\n\n${stanceFor(voiceType, framework)}`,
+        maxTokens: isOpening ? 220 : isBothFeedback ? 140 : 160,
+        instructionFor: (voiceType) => `${lead}\n\n${shape}\n\n${stanceFor(voiceType, framework, state.mode)}`,
       })
       if (wantsDiagram && ids) {
         await Promise.all(voices.map((voice) => fetchDiagramRef.current(ids[voice], {
@@ -456,7 +444,7 @@ export function useChat() {
       busyRef.current = false
       dispatch({ type: 'STOP_LOADING' })
     }
-  }, [dispatch, getActiveFramework, runVoices, state.chatPhase, state.clarificationRound, state.messages])
+  }, [dispatch, getActiveFramework, runVoices, state.chatPhase, state.clarificationRound, state.messages, state.mode])
 
   const startDebate = useCallback(async () => {
     if (busyRef.current) return
@@ -476,12 +464,12 @@ export function useChat() {
         phase: 'debate',
         priorMessages: state.messages,
         userMessage: null,
-        maxTokens: 180,
+        maxTokens: 160,
         instructionFor: (voiceType) => {
           const base = voiceType === 'ethos'
             ? debateInstruction(framework.voiceB.name, ego.text)
             : debateInstruction(framework.voiceA.name, ethos.text)
-          return `${base}\n\n${stanceFor(voiceType, framework)}`
+          return `${base}\n\n${stanceFor(voiceType, framework, state.mode)}`
         },
       })
     } catch (err) {
@@ -490,7 +478,7 @@ export function useChat() {
       busyRef.current = false
       dispatch({ type: 'STOP_LOADING' })
     }
-  }, [dispatch, getActiveFramework, runVoices, state.messages])
+  }, [dispatch, getActiveFramework, runVoices, state.messages, state.mode])
 
   const startElaborate = useCallback(async () => {
     if (busyRef.current) return
@@ -508,7 +496,8 @@ export function useChat() {
         phase: 'elaborate',
         priorMessages: state.messages,
         userMessage: null,
-        instructionFor: (voiceType) => `${elaborateInstruction(voiceType === 'ethos' ? ethos.text : ego.text)}\n\n${stanceFor(voiceType, framework)}`,
+        maxTokens: 240,
+        instructionFor: (voiceType) => `${elaborateInstruction(voiceType === 'ethos' ? ethos.text : ego.text)}\n\n${stanceFor(voiceType, framework, state.mode)}`,
       })
     } catch (err) {
       console.error('startElaborate error:', err)
@@ -516,14 +505,14 @@ export function useChat() {
       busyRef.current = false
       dispatch({ type: 'STOP_LOADING' })
     }
-  }, [dispatch, getActiveFramework, runVoices, state.messages])
+  }, [dispatch, getActiveFramework, runVoices, state.messages, state.mode])
 
   const regenerateMessage = useCallback(async (messageId) => {
     if (busyRef.current) return
     const framework = getActiveFramework()
     const message = state.messages.find((m) => m.id === messageId)
     if (!message || (message.type !== 'ethos' && message.type !== 'ego')) return
-    const replay = replayFor(message, state.messages, framework)
+    const replay = replayFor(message, state.messages, framework, state.mode)
     if (!replay?.instruction) return
 
     busyRef.current = true
@@ -544,7 +533,7 @@ export function useChat() {
       busyRef.current = false
       dispatch({ type: 'STOP_LOADING' })
     }
-  }, [dispatch, getActiveFramework, runVoices, state.messages])
+  }, [dispatch, getActiveFramework, runVoices, state.messages, state.mode])
 
   const fetchDiagram = useCallback(async (msgId, offer) => {
     const framework = getActiveFramework()
@@ -593,7 +582,7 @@ export function useChat() {
         lastUser ? `The user left off here: """${String(lastUser.text).slice(0, 700)}"""` : '',
         `You will use ${route.framework} once you know enough. Do not run it yet.`,
         tool?.asks ? `The detail you still need is in this direction: ${tool.asks}` : 'Ask for the one detail you still need before brainstorming can begin.',
-        'Write two short sentences. The second sentence is one question that asks for that missing detail. Ordinary language. No list. No diagram. No tool call.',
+        'Stay under 40 words. Two short sentences. The second is one question. Ordinary language. No list. No diagram. No tool call.',
         'Your very first line must be exactly:',
         'MODE:answer',
       ].filter(Boolean).join('\n')
@@ -607,7 +596,7 @@ export function useChat() {
       route.acknowledgment ? 'Open with one line of acknowledgment, then the challenge. Do not skip the challenge.' : 'Go straight into the framework.',
       'The profile is for tone only. Do not quote scores. Do not press on a fear.',
       summary || '',
-      'Write Markdown. Two items starting with "- ", bold only the claim, then one short paragraph. Stay under 160 words.',
+      'Write Markdown. Two items starting with "- ", bold only the claim, then one sentence. Stay under 70 words. One path only. Do not also argue the other path.',
       'The reply is ordinary sentences. Never draw a diagram with characters: no pipes, arrows, brackets, or box art. The app draws diagrams.',
       voiceType === 'ego'
         ? 'Inside a diagram tool only: expand, then cut, and rate leverage from 0 to 1. Do not describe that structure in the reply.'
@@ -628,7 +617,7 @@ export function useChat() {
         phase: 'brainstorm',
         priorMessages: state.messages,
         userMessage: null,
-        maxTokens: session?.collect ? 320 : 1400,
+        maxTokens: session?.collect ? 160 : 560,
         diagram: !session?.collect,
         c2: session?.c2,
         onDiagram: (event) => events.push(event),
