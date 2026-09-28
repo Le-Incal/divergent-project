@@ -338,7 +338,7 @@ Supporting documentation goes in `docs/` (see manifest below).
 
 Each voice prompt (P-1 through P-4) is sent as the `system` message in the AI provider API call. The prompt files are markdown but should be read as plain text and injected as-is.
 
-For multi-provider support (Claude, GPT-4o, Gemini, Grok):
+For multi-provider support (Claude, GPT-6 Sol, Gemini 3.8 Flash, Grok):
 - All prompts are cross-provider neutral (no provider-specific instructions)
 - The same prompt file works with any provider
 - Provider selection is a backend configuration, not a prompt concern
@@ -525,7 +525,7 @@ ST-1 and ST-2 are appended to voice prompts when the user selects a branch, shif
 ### Prerequisites
 
 - Node.js 18+
-- API keys for at least one supported provider (Claude, GPT-4o, Gemini, or Grok)
+- API keys for at least one supported provider (Claude, GPT-6 Sol, Gemini 3.8 Flash, or Grok)
 
 ### Installation
 
@@ -540,8 +540,8 @@ npm run dev
 
 ```
 ANTHROPIC_API_KEY=       # Claude
-OPENAI_API_KEY=          # GPT-4o
-GOOGLE_AI_API_KEY=       # Gemini
+OPENAI_API_KEY=          # GPT-6 Sol
+GOOGLE_AI_API_KEY=       # Gemini 3.8 Flash
 XAI_API_KEY=             # Grok
 DEFAULT_PROVIDER=claude  # Which provider to use by default
 ```

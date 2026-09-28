@@ -69,7 +69,7 @@ ST-1 and ST-2 are appended to voice prompts when the user selects a branch, shif
 ### Prerequisites
 
 - Node.js 18+
-- API keys for at least one supported provider (Claude, GPT-4o, Gemini, or Grok)
+- API keys for at least one supported provider (Claude, GPT-6 Sol, Gemini 3.8 Flash, or Grok)
 
 ### Installation
 
@@ -84,8 +84,8 @@ npm run dev
 
 ```
 ANTHROPIC_API_KEY=       # Claude
-OPENAI_API_KEY=          # GPT-4o
-GOOGLE_API_KEY=          # Gemini (or GOOGLE_AI_API_KEY in some docs)
+OPENAI_API_KEY=          # GPT-6 Sol
+GOOGLE_API_KEY=          # Gemini 3.8 Flash (or GOOGLE_AI_API_KEY in some docs)
 XAI_API_KEY=             # Grok
 DEFAULT_PROVIDER=claude  # Which provider to use by default
 ```

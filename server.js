@@ -234,13 +234,14 @@ app.post('/api/chat-openai', async (req, res) => {
         'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
+        model: 'gpt-6-sol',
         stream: true,
+        reasoning_effort: 'none',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: message },
         ],
-        max_tokens: chatTokenLimit(req.body),
+        max_completion_tokens: chatTokenLimit(req.body),
       }),
     });
 
@@ -304,14 +305,17 @@ app.post('/api/chat-gemini', async (req, res) => {
     }
 
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:streamGenerateContent?key=${process.env.GOOGLE_API_KEY}&alt=sse`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:streamGenerateContent?key=${process.env.GOOGLE_API_KEY}&alt=sse`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contents: [{ role: 'user', parts: [{ text: message }] }],
           systemInstruction: { parts: [{ text: systemPrompt }] },
-          generationConfig: { maxOutputTokens: chatTokenLimit(req.body), temperature: 0.8 },
+          generationConfig: {
+            maxOutputTokens: chatTokenLimit(req.body),
+            thinkingConfig: { thinkingLevel: 'LOW' },
+          },
         }),
       }
     );
@@ -343,7 +347,8 @@ app.post('/api/chat-gemini', async (req, res) => {
 
             try {
               const parsed = JSON.parse(data);
-              const text = parsed.candidates?.[0]?.content?.parts?.[0]?.text || '';
+              const parts = parsed.candidates?.[0]?.content?.parts || [];
+              const text = parts.filter((part) => part.text && !part.thought).map((part) => part.text).join('');
               if (text) {
                 res.write(`data: ${JSON.stringify({ text, voice: voiceName })}\n\n`);
               }

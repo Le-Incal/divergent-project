@@ -84,7 +84,7 @@ The user can switch between Ethos vs Ego and any Unique Persona at any time duri
 | System prompts | Voices informed by opposing worldviews | Voices instructed to argue, challenge, and try to win |
 | Exchange energy | Thoughtful back-and-forth, building toward clarity | Heated debate, each round escalating in conviction |
 | Resolution | "Agree to disagree" with clear summary of tensions | "Agree to disagree" with no attempt to soften the divide |
-| Available models | Claude, GPT-4o, Gemini | Claude, GPT-4o, Gemini, Grok |
+| Available models | Claude, GPT-6 Sol, Gemini 3.8 Flash | Claude, GPT-6 Sol, Gemini 3.8 Flash, Grok |
 | Disclaimer | Standard decision-tool disclaimer | Research disclaimer: "This is an experimental research vehicle" |
 
 ---
@@ -123,10 +123,10 @@ This applies equally to the Unique Personas. In Default, the Guardian cautions a
 Sandpit's unique selling point is cross-model debate. Users can pit different AI providers against each other:
 
 - Claude as Ethos vs Grok as Ego
-- GPT-4o as Guardian vs Gemini as Gambler
+- GPT-6 Sol as Guardian vs Gemini 3.8 Flash as Gambler
 - Any combination the user wants to explore
 
-Each model brings different native tendencies: Claude's measured analysis vs Grok's irreverence. GPT-4o's agreeable helpfulness vs Gemini's directness. The matchups produce emergent dynamics that even we can't fully predict.
+Each model brings different native tendencies: Claude's measured analysis vs Grok's irreverence. GPT-6 Sol's agreeable helpfulness vs Gemini 3.8 Flash's directness. The matchups produce emergent dynamics that even we can't fully predict.
 
 ### Grok's Role
 
@@ -146,7 +146,7 @@ Both modes share the same structural layout: collapsible sidebar with chat histo
 
 ### Model Selector
 
-The model selector appears as a dropdown above or below the input text box. In Default Mode, it offers Claude, GPT-4o, and Gemini as a single selector (same model powers both voices). In Sandpit, it expands to two separate dropdowns, one per voice, enabling cross-model matchups. Grok appears only in the Sandpit dropdowns.
+The model selector appears as a dropdown above or below the input text box. In Default Mode, it offers Claude, GPT-6 Sol, and Gemini 3.8 Flash as a single selector (same model powers both voices). In Sandpit, it expands to two separate dropdowns, one per voice, enabling cross-model matchups. Grok appears only in the Sandpit dropdowns.
 
 ### Model Name on Cards
 
@@ -214,14 +214,14 @@ Both Default and Sandpit support Cards view (side-by-side panels) and Thread vie
 - Model name displayed in small faint text on voice cards
 
 ### Default Mode Specific
-- Model selector (single dropdown): Claude, GPT-4o, Gemini
+- Model selector (single dropdown): Claude, GPT-6 Sol, Gemini 3.8 Flash
 - Disclaimer modal on first use
 - Constructive voice system prompts with guardrails
 - Thoughtful exchange energy building toward clarity
 
 ### Sandpit Specific
 - Adversarial system prompts (no added guardrails)
-- Model selector (two dropdowns, one per voice): Claude, GPT-4o, Gemini, Grok
+- Model selector (two dropdowns, one per voice): Claude, GPT-6 Sol, Gemini 3.8 Flash, Grok
 - Cross-model matchup selection
 - Research disclaimer on first access: "This is an experimental research vehicle"
 - Heated exchange energy with escalating conviction
@@ -259,8 +259,8 @@ API Layer (Vercel Edge Functions)
 Models Supported
   Default Mode:
     Claude (Anthropic) - Primary
-    GPT-4o (OpenAI)
-    Gemini (Google)
+    GPT-6 Sol (OpenAI)
+    Gemini 3.8 Flash (Google)
   Sandpit (all Default models plus):
     Grok (xAI) - Sandpit exclusive
 

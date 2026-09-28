@@ -17,7 +17,7 @@ February 2026 | divergent-app.ai
 
 Feed each user prompt to both voices independently using the **patched** exchange prompts (P-1 through P-4 with Section 4b and Personality Texture integrated). Compare outputs against both the conversational behavior criteria AND the personality consistency criteria.
 
-Run each scenario against every supported model (Claude, GPT-4o, Gemini, Grok). Conversational naturalness can vary significantly across providers. A voice that feels human on Claude may feel robotic on Gemini. The test must pass on all providers.
+Run each scenario against every supported model (Claude, GPT-6 Sol, Gemini 3.8 Flash, Grok). Conversational naturalness can vary significantly across providers. A voice that feels human on Claude may feel robotic on Gemini. The test must pass on all providers.
 
 ## Evaluation Dimensions
 
@@ -476,7 +476,7 @@ Record results in a scoring matrix:
 |----------|-------|-------|-------|-------|-------|-------|-------|-------|---------|
 | 1.1 Ethos | Claude | P/P/F | P/P/F | P/P/F | P/P/F | P/P/F | P/P/F | P/P/F | P/P/F |
 | 1.1 Ego | Claude | ... | ... | ... | ... | ... | ... | ... | ... |
-| 1.1 Ethos | GPT-4o | ... | ... | ... | ... | ... | ... | ... | ... |
+| 1.1 Ethos | GPT-6 Sol | ... | ... | ... | ... | ... | ... | ... | ... |
 
 ## Step 6: Iterate
 Adjust Section 4b or Personality Texture based on failure patterns. Re-run failed scenarios only.

@@ -349,7 +349,7 @@ The appended instruction communicates:
 
 ---
 
-Divergent supports Claude, GPT-4o, Gemini, and Grok. All system prompts must produce consistent behavior regardless of which model is running.
+Divergent supports Claude, GPT-6 Sol, Gemini 3.8 Flash, and Grok. All system prompts must produce consistent behavior regardless of which model is running.
 
 ## Rules
 

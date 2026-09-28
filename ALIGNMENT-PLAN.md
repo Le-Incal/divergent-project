@@ -46,8 +46,8 @@ This document maps the **current repo** to the **DIVERGENT-PROJECT-BRIEF-v2.md**
 
 | Brief | Current Repo | Action |
 |-------|--------------|--------|
-| **Default:** Single dropdown (same model for both voices): Claude, GPT-4o, Gemini | Two selectors in sidebar (Voice A, Voice B) | **Move** model selector to input area; **single** dropdown in Default; same model for both voices |
-| **Sandpit:** Two dropdowns (one per voice); Claude, GPT-4o, Gemini, **Grok** | No Grok | **Add** Grok (Sandpit-only); show **two** dropdowns in Sandpit |
+| **Default:** Single dropdown (same model for both voices): Claude, GPT-6 Sol, Gemini 3.8 Flash | Two selectors in sidebar (Voice A, Voice B) | **Move** model selector to input area; **single** dropdown in Default; same model for both voices |
+| **Sandpit:** Two dropdowns (one per voice); Claude, GPT-6 Sol, Gemini 3.8 Flash, **Grok** | No Grok | **Add** Grok (Sandpit-only); show **two** dropdowns in Sandpit |
 | Grok only in Sandpit | N/A | **Add** xAI provider; include only when `mode === 'sandpit'` |
 
 **Files to modify:** `src/context/AppContext.jsx` (single model in Default; optional Grok in PROVIDERS or separate Sandpit providers), `src/components/ProviderSelector.jsx` (single vs dual UI), `src/components/InputArea.jsx` or layout (selector above/below input), `src/components/Sidebar.jsx` (remove or relocate model selection).
