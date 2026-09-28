@@ -544,35 +544,6 @@ a:hover { color: var(--ink); text-decoration-color: var(--link-underline-hover);
 .landingCta .btn:hover {
   transform: translateX(4px);
 }
-.landingUnlock {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-.landingUnlockInput {
-  flex: 0 1 200px;
-  min-width: 0;
-  padding: 12px 14px;
-  border: 1px solid var(--border-medium);
-  border-radius: var(--radius-md);
-  background: transparent;
-  font-family: var(--font-primary);
-  font-size: var(--text-sm);
-  color: var(--ink);
-  transition: border-color var(--duration-fast) var(--ease-out);
-}
-.landingUnlockInput::placeholder { color: var(--ink-ghost); }
-.landingUnlockInput:focus {
-  outline: none;
-  border-color: var(--ink);
-}
-.landingUnlockInput:disabled { opacity: 0.55; }
-.landingUnlockError {
-  margin: var(--space-2) 0 0;
-  font-family: var(--font-primary);
-  font-size: var(--text-xs);
-  color: var(--ink-tertiary);
-}
 
 @media (max-width: 1100px) {
   .landingPage { padding: var(--space-8) var(--space-7); }

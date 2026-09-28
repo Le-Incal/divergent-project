@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useLayoutEffect, useRef, useState } from 'react'
 
 function hypSentence(text) {
   return <span className="landingHypSentence">{text}</span>
@@ -6,11 +6,6 @@ function hypSentence(text) {
 
 export default function LandingPage({ onEnter }) {
   const [isEntering, setIsEntering] = useState(false)
-  const [unlockOpen, setUnlockOpen] = useState(false)
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
-  const [checking, setChecking] = useState(false)
-  const passwordRef = useRef(null)
   const heroRef = useRef(null)
   const titleLayerRef = useRef(null)
   const titleTextRef = useRef(null)
@@ -27,38 +22,6 @@ export default function LandingPage({ onEnter }) {
     // Let the button animation play briefly before entering.
     window.setTimeout(() => onEnter?.(), 280)
   }
-
-  const handleUnlock = async (event) => {
-    event.preventDefault()
-    if (checking || isEntering || !password) return
-
-    setChecking(true)
-    setError('')
-    try {
-      const response = await fetch('/api/access', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password }),
-      })
-
-      if (response.ok) {
-        handleEnter()
-        return
-      }
-
-      const data = await response.json().catch(() => ({}))
-      setError(response.status === 503 ? 'Access is not configured yet.' : data.error || 'Incorrect password')
-    } catch {
-      setError('Could not reach the server. Try again.')
-    }
-
-    setPassword('')
-    setChecking(false)
-  }
-
-  useEffect(() => {
-    if (unlockOpen) passwordRef.current?.focus()
-  }, [unlockOpen])
 
   useLayoutEffect(() => {
     const hero = heroRef.current
@@ -203,36 +166,9 @@ export default function LandingPage({ onEnter }) {
 
               <div className="landingCta" ref={ctaAreaRef}>
                 <p className="landingCtaTagline">See where your paths diverge</p>
-                {unlockOpen ? (
-                  <form className="landingUnlock" onSubmit={handleUnlock}>
-                    <input
-                      ref={passwordRef}
-                      type="password"
-                      className="landingUnlockInput"
-                      value={password}
-                      onChange={(e) => {
-                        setPassword(e.target.value)
-                        setError('')
-                      }}
-                      placeholder="Access password"
-                      aria-label="Access password"
-                      autoComplete="current-password"
-                      disabled={checking || isEntering}
-                    />
-                    <button
-                      type="submit"
-                      className="btn btn-primary btn-arrow"
-                      disabled={checking || isEntering || !password}
-                    >
-                      {checking ? 'Checking' : 'Enter'}
-                    </button>
-                  </form>
-                ) : (
-                  <button type="button" className="btn btn-primary" onClick={() => setUnlockOpen(true)}>
-                    Enter site
-                  </button>
-                )}
-                {error ? <p className="landingUnlockError" role="alert">{error}</p> : null}
+                <button type="button" className="btn btn-primary" onClick={handleEnter} disabled={isEntering}>
+                  Enter site
+                </button>
               </div>
             </div>
           </div>
