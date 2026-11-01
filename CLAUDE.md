@@ -4,7 +4,7 @@ AI decision-making platform. Two voices (Ethos and Ego) reason from incompatible
 ## Stack
 - Frontend: React (liquid glass UI)
 - Backend: Express.js
-- AI Providers: Claude, GPT-6 Sol, Gemini 3.8 Flash, Grok (multi-provider)
+- AI Providers: Claude, GPT-6 Sol, Gemini 4 Argon, Grok (multi-provider, silent fallback to Claude then GPT via lib/streaming.cjs)
 - Deployment: Railway -> divergent-app.ai
 - Node 18+
 ## Commands

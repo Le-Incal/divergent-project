@@ -40,7 +40,7 @@ export const PROVIDERS = {
   gemini: {
     id: 'gemini',
     name: 'Gemini 3.8 Flash',
-    model: 'gemini-3.8-flash',
+    model: 'gemini-4-argon',
     endpoint: '/api/chat-gemini',
     color: '#4285F4',
   },
