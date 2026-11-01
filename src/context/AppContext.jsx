@@ -39,14 +39,14 @@ export const PROVIDERS = {
   gemini: {
     id: 'gemini',
     name: 'Gemini',
-    model: 'gemini-1.5-pro',
+    model: 'gemini-4-argon',
     endpoint: '/api/chat-gemini',
     color: '#4285F4',
   },
   grok: {
     id: 'grok',
     name: 'Grok',
-    model: 'grok-2',
+    model: 'grok-4.7',
     endpoint: '/api/chat-grok',
     color: '#1DA1F2',
   },
